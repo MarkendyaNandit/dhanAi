@@ -144,6 +144,7 @@ function MainApp() {
   const handleLogout = () => {
     setCurrentUser(null);
     setStatementData(null);
+    localStorage.removeItem('token');
   };
 
   // Auto-detect user's currency based on their device location (GeoIP)

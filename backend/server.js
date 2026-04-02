@@ -20,14 +20,27 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173'];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1 && process.env.NODE_ENV === 'production') {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
-app.use('/api/analyze', analyzeRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/forecast', forecastRoutes);
+import { protect } from './middleware/auth.js';
+
+app.use('/api/analyze', protect, analyzeRoutes);
+app.use('/api/chat', protect, chatRoutes);
+app.use('/api/forecast', protect, forecastRoutes);
 app.use('/api/auth', authRoutes);
 
 

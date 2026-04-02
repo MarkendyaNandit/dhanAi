@@ -1,4 +1,16 @@
-const API_URL = 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+
+const getAuthHeaders = (isFormData = false) => {
+  const token = localStorage.getItem('token');
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  return headers;
+};
 
 export const uploadStatement = async (file, userId) => {
   const formData = new FormData();
@@ -7,6 +19,7 @@ export const uploadStatement = async (file, userId) => {
 
   const response = await fetch(`${API_URL}/analyze`, {
     method: 'POST',
+    headers: getAuthHeaders(true),
     body: formData,
   });
 
@@ -19,7 +32,9 @@ export const uploadStatement = async (file, userId) => {
 };
 
 export const fetchHistory = async (userId) => {
-    const response = await fetch(`${API_URL}/analyze?userId=${userId}`);
+    const response = await fetch(`${API_URL}/analyze?userId=${userId}`, {
+        headers: getAuthHeaders()
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch history');
     }
@@ -29,7 +44,7 @@ export const fetchHistory = async (userId) => {
 export const fetchForecast = async (statementId, transactions = null, totalIncome = 0, totalExpense = 0) => {
     const response = await fetch(`${API_URL}/forecast`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ statementId, transactions, totalIncome, totalExpense })
     });
     if (!response.ok) throw new Error('Failed to fetch forecast');
@@ -39,7 +54,7 @@ export const fetchForecast = async (statementId, transactions = null, totalIncom
 export const sendChatMessage = async (message, statementId, context = null) => {
     const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ message, statementId, context })
     });
     if (!response.ok) throw new Error('Failed to send message');
@@ -86,7 +101,9 @@ export const verifyOTP = async (email, code) => {
 };
 
 export const syncTransactions = async () => {
-    const response = await fetch(`${API_URL}/analyze/sync`);
+    const response = await fetch(`${API_URL}/analyze/sync`, {
+        headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error('Sync failed');
     return response.json();
 };
@@ -94,7 +111,7 @@ export const syncTransactions = async () => {
 export const updateOverview = async (transactions, totalIncome, totalExpense) => {
     const response = await fetch(`${API_URL}/analyze/update-overview`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ transactions, totalIncome, totalExpense })
     });
     if (!response.ok) throw new Error('Failed to update overview');
@@ -117,7 +134,7 @@ export const register = async (name, email, password, phone) => {
 export const updateProfile = async (userId, updates) => {
     const response = await fetch(`${API_URL}/auth/update-profile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ userId, ...updates })
     });
     if (!response.ok) {
@@ -128,7 +145,9 @@ export const updateProfile = async (userId, updates) => {
 };
 
 export const getGoogleAuthUrl = async () => {
-    const response = await fetch(`${API_URL}/auth/google/url`);
+    const response = await fetch(`${API_URL}/auth/google/url`, {
+        headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch Auth URL');
     return response.json();
 };
@@ -136,7 +155,7 @@ export const getGoogleAuthUrl = async () => {
 export const linkGoogleAccount = async (code, userId) => {
     const response = await fetch(`${API_URL}/auth/google/callback`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ code, userId })
     });
     if (!response.ok) {
@@ -145,3 +164,4 @@ export const linkGoogleAccount = async (code, userId) => {
     }
     return response.json();
 };
+
