@@ -93,7 +93,12 @@ router.post('/register', authLimiter, async (req, res) => {
             user: { _id: newUser._id, email: newUser.email, name: newUser.name, phone: newUser.phone, accNo: newUser.accNo, imapPassword: newUser.imapPassword || '' } 
         });
     } catch (err) {
-        res.status(500).json({ error: 'Registration failed', details: err.message });
+        console.error('Registration Error:', err);
+        res.status(500).json({ 
+            error: 'Registration failed', 
+            details: err.message,
+            code: err.code // Useful for spotting duplicate key errors
+        });
     }
 });
 
