@@ -24,18 +24,23 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, '')) 
   : ['http://localhost:5173'];
 
+console.log('CORS Allowed Origins:', allowedOrigins);
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Normalize incoming origin to compare accurately
+    // Normalize incoming origin
     const normalizedOrigin = origin.trim().replace(/\/$/, '');
     
-    if (allowedOrigins.indexOf(normalizedOrigin) === -1 && process.env.NODE_ENV === 'production') {
-      console.log(`Blocked by CORS: ${normalizedOrigin}`);
-      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    const isAllowed = allowedOrigins.indexOf(normalizedOrigin) !== -1 || process.env.NODE_ENV !== 'production';
+    
+    if (!isAllowed) {
+      console.log(`CORS Blocked: ${normalizedOrigin}`);
+      return callback(null, false);
     }
+    
     callback(null, true);
   },
   credentials: true
