@@ -1,0 +1,6 @@
+[
+  {"date": "2023-10-01", "description": "Salary", "amount": 5000, "type": "income", "category": "Other"},
+  {"date": "2023-10-02", "description": "Trader Joe's", "amount": 150, "type": "expense", "category": "Other"},
+  {"date": "2023-10-05", "description": "Uber Ride", "amount": 30, "type": "expense", "category": "Other"},
+  {"date": "2023-10-10", "description": "City Apartments Rent", "amount": 1500, "type": "expense", "category": "Other"}
+]

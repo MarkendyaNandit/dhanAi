@@ -1,0 +1,501 @@
+date,description,amount,type
+2023-11-17,Comcast Internet,71.23,expense
+2024-01-22,Starbucks,7.77,expense
+2023-12-19,Trader Joe's,108.81,expense
+2023-11-21,Amazon Purchase,76.37,expense
+2023-12-25,Comcast Internet,93.91,expense
+2023-11-07,Shell Gas Station,45.61,expense
+2023-11-02,Trader Joe's,130.16,expense
+2023-11-28,Uber Ride,15.83,expense
+2023-12-21,Acme Corp Salary,5948.63,income
+2023-11-30,Starbucks,7.31,expense
+2023-11-27,Shell Gas Station,41.78,expense
+2023-11-19,Shell Gas Station,43.37,expense
+2023-11-08,Acme Corp Salary,5321.87,income
+2023-12-10,City Apartments Rent,1829.21,expense
+2023-12-17,Uber Ride,21.31,expense
+2024-01-18,Acme Corp Salary,5592.5,income
+2024-01-21,Starbucks,8.43,expense
+2023-11-23,Starbucks,7.25,expense
+2023-11-04,City Apartments Rent,1425.61,expense
+2023-11-28,Trader Joe's,132.37,expense
+2023-12-19,Shell Gas Station,46.0,expense
+2024-01-24,City Apartments Rent,1362.95,expense
+2023-12-04,Starbucks,8.25,expense
+2024-01-09,Starbucks,6.53,expense
+2023-12-21,Amazon Purchase,61.26,expense
+2024-01-04,Shell Gas Station,50.47,expense
+2023-12-16,City Apartments Rent,1719.64,expense
+2023-11-20,Shell Gas Station,39.53,expense
+2023-11-26,Shell Gas Station,53.13,expense
+2023-12-24,Starbucks,7.29,expense
+2024-01-17,Uber Ride,19.71,expense
+2023-12-10,City Apartments Rent,1348.34,expense
+2023-12-15,Amazon Purchase,65.94,expense
+2024-01-30,Uber Ride,19.28,expense
+2023-12-18,City Apartments Rent,1646.55,expense
+2024-01-01,Shell Gas Station,52.18,expense
+2024-01-01,Starbucks,8.04,expense
+2024-01-07,Comcast Internet,90.01,expense
+2023-11-11,Amazon Purchase,75.99,expense
+2023-11-16,Starbucks,8.88,expense
+2023-12-14,Acme Corp Salary,5214.75,income
+2024-01-23,Amazon Purchase,82.58,expense
+2023-11-15,Comcast Internet,67.32,expense
+2023-12-01,Comcast Internet,91.93,expense
+2023-11-03,Acme Corp Salary,4403.58,income
+2023-12-30,Trader Joe's,110.53,expense
+2023-11-17,Amazon Purchase,69.93,expense
+2023-12-21,City Apartments Rent,1403.9,expense
+2023-12-11,Amazon Purchase,59.38,expense
+2024-01-21,City Apartments Rent,1857.25,expense
+2023-11-08,Acme Corp Salary,5868.15,income
+2024-01-19,Starbucks,8.17,expense
+2023-11-02,City Apartments Rent,1480.56,expense
+2023-12-26,Trader Joe's,147.2,expense
+2023-12-17,Uber Ride,17.1,expense
+2024-01-16,Amazon Purchase,59.47,expense
+2024-01-12,Starbucks,6.29,expense
+2024-01-16,Uber Ride,15.32,expense
+2024-01-13,Gym Membership,59.95,expense
+2023-11-23,Trader Joe's,120.26,expense
+2023-12-06,Acme Corp Salary,5193.8,income
+2024-01-19,Starbucks,6.57,expense
+2023-11-04,Gym Membership,43.24,expense
+2023-11-10,Shell Gas Station,52.91,expense
+2023-11-05,Amazon Purchase,78.02,expense
+2023-12-17,Starbucks,7.66,expense
+2023-12-28,Comcast Internet,94.01,expense
+2023-11-15,Gym Membership,49.65,expense
+2023-11-04,Starbucks,6.62,expense
+2024-01-16,Starbucks,7.68,expense
+2023-11-21,Starbucks,8.57,expense
+2023-12-02,City Apartments Rent,1840.35,expense
+2023-12-11,Shell Gas Station,38.09,expense
+2023-12-23,Comcast Internet,75.44,expense
+2023-11-07,Gym Membership,41.45,expense
+2024-01-15,Starbucks,8.75,expense
+2023-12-28,Shell Gas Station,48.3,expense
+2023-11-28,City Apartments Rent,1405.24,expense
+2023-12-04,Amazon Purchase,80.26,expense
+2023-11-18,Starbucks,8.76,expense
+2023-12-23,Starbucks,6.7,expense
+2024-01-08,Acme Corp Salary,5104.7,income
+2024-01-14,City Apartments Rent,1315.11,expense
+2023-11-28,Gym Membership,50.43,expense
+2023-12-30,Uber Ride,14.56,expense
+2024-01-10,Amazon Purchase,80.3,expense
+2024-01-16,Trader Joe's,135.69,expense
+2023-12-01,Uber Ride,16.88,expense
+2024-01-11,Amazon Purchase,69.64,expense
+2023-11-29,Uber Ride,18.47,expense
+2023-11-22,Amazon Purchase,57.96,expense
+2024-01-26,Trader Joe's,136.63,expense
+2024-01-11,Comcast Internet,73.96,expense
+2023-11-11,Acme Corp Salary,5228.44,income
+2024-01-27,Uber Ride,20.56,expense
+2023-12-10,Acme Corp Salary,6571.2,income
+2023-12-27,Uber Ride,17.71,expense
+2024-01-16,Acme Corp Salary,5069.47,income
+2024-01-16,Shell Gas Station,50.81,expense
+2023-11-07,Acme Corp Salary,4739.28,income
+2023-12-20,Trader Joe's,134.19,expense
+2023-12-21,Acme Corp Salary,6491.2,income
+2024-01-23,Starbucks,7.29,expense
+2024-01-01,Uber Ride,16.36,expense
+2023-11-30,Trader Joe's,117.5,expense
+2023-12-15,Acme Corp Salary,5876.32,income
+2023-12-25,Uber Ride,17.55,expense
+2024-01-18,Shell Gas Station,48.41,expense
+2024-01-20,Acme Corp Salary,4867.17,income
+2024-01-11,Starbucks,7.34,expense
+2024-01-11,Starbucks,8.84,expense
+2023-11-23,Shell Gas Station,38.2,expense
+2024-01-15,Trader Joe's,118.87,expense
+2023-11-21,City Apartments Rent,1722.43,expense
+2024-01-18,Starbucks,7.06,expense
+2023-11-06,Starbucks,7.1,expense
+2023-12-27,Shell Gas Station,49.6,expense
+2023-12-13,Uber Ride,17.78,expense
+2024-01-06,Gym Membership,49.14,expense
+2023-11-13,Starbucks,8.57,expense
+2024-01-11,Amazon Purchase,68.63,expense
+2023-11-30,Shell Gas Station,47.34,expense
+2023-11-20,Gym Membership,52.87,expense
+2023-12-14,Trader Joe's,112.07,expense
+2024-01-23,Shell Gas Station,46.19,expense
+2023-11-02,Trader Joe's,110.85,expense
+2024-01-25,Acme Corp Salary,4488.68,income
+2023-11-25,Starbucks,6.74,expense
+2023-12-08,City Apartments Rent,1754.09,expense
+2024-01-15,Acme Corp Salary,6400.47,income
+2024-01-03,Shell Gas Station,48.87,expense
+2023-12-18,Starbucks,7.5,expense
+2023-12-13,Acme Corp Salary,6356.82,income
+2024-01-10,City Apartments Rent,1754.29,expense
+2023-11-08,City Apartments Rent,1783.31,expense
+2024-01-11,Uber Ride,16.77,expense
+2023-11-04,Starbucks,6.11,expense
+2023-11-21,Uber Ride,19.36,expense
+2023-11-08,Starbucks,7.67,expense
+2024-01-20,Shell Gas Station,51.46,expense
+2024-01-22,Uber Ride,16.43,expense
+2023-12-05,City Apartments Rent,1370.3,expense
+2024-01-25,City Apartments Rent,1348.76,expense
+2023-12-20,City Apartments Rent,1803.11,expense
+2024-01-13,Shell Gas Station,51.47,expense
+2023-11-15,Gym Membership,58.67,expense
+2023-11-24,Uber Ride,16.09,expense
+2023-11-18,Gym Membership,46.05,expense
+2023-11-19,City Apartments Rent,1829.26,expense
+2023-12-17,Uber Ride,17.59,expense
+2024-01-29,Gym Membership,55.99,expense
+2023-11-13,Gym Membership,50.8,expense
+2023-11-03,City Apartments Rent,1333.35,expense
+2023-11-24,Acme Corp Salary,6311.16,income
+2023-11-17,Starbucks,8.61,expense
+2023-12-12,Shell Gas Station,50.63,expense
+2024-01-19,Gym Membership,44.01,expense
+2024-01-06,Comcast Internet,87.04,expense
+2023-12-04,Amazon Purchase,58.16,expense
+2023-11-28,Shell Gas Station,46.16,expense
+2023-11-26,Trader Joe's,146.71,expense
+2023-11-08,Gym Membership,51.56,expense
+2024-01-18,Comcast Internet,68.74,expense
+2023-12-14,Uber Ride,17.26,expense
+2023-11-10,Comcast Internet,95.29,expense
+2023-11-20,Uber Ride,16.05,expense
+2024-01-01,City Apartments Rent,1687.64,expense
+2024-01-30,Trader Joe's,130.87,expense
+2024-01-18,Trader Joe's,109.62,expense
+2023-12-25,Acme Corp Salary,6573.32,income
+2024-01-17,Gym Membership,59.22,expense
+2023-11-15,Uber Ride,21.03,expense
+2024-01-12,Shell Gas Station,50.11,expense
+2023-11-01,Trader Joe's,136.08,expense
+2024-01-26,Starbucks,6.21,expense
+2023-11-05,Trader Joe's,109.01,expense
+2023-12-27,Gym Membership,44.05,expense
+2023-12-21,Amazon Purchase,56.83,expense
+2024-01-13,Starbucks,7.23,expense
+2023-12-20,Amazon Purchase,58.55,expense
+2024-01-02,Gym Membership,40.44,expense
+2024-01-10,Comcast Internet,70.79,expense
+2023-12-12,Shell Gas Station,47.14,expense
+2023-12-12,Comcast Internet,92.13,expense
+2024-01-08,Acme Corp Salary,4628.3,income
+2023-12-20,Uber Ride,15.88,expense
+2024-01-07,City Apartments Rent,1550.75,expense
+2024-01-08,Amazon Purchase,74.96,expense
+2023-11-27,Uber Ride,14.49,expense
+2024-01-18,Acme Corp Salary,5523.62,income
+2024-01-30,Trader Joe's,110.73,expense
+2023-11-27,City Apartments Rent,1896.46,expense
+2024-01-10,Gym Membership,47.54,expense
+2023-12-16,Gym Membership,44.71,expense
+2023-12-29,Amazon Purchase,58.42,expense
+2023-12-28,City Apartments Rent,1742.73,expense
+2023-11-14,Amazon Purchase,76.44,expense
+2024-01-09,Uber Ride,15.25,expense
+2024-01-05,Gym Membership,55.86,expense
+2023-12-23,Trader Joe's,129.82,expense
+2023-11-12,Shell Gas Station,50.74,expense
+2024-01-07,Trader Joe's,135.2,expense
+2023-11-15,City Apartments Rent,1327.81,expense
+2023-12-19,Acme Corp Salary,5470.39,income
+2024-01-01,Uber Ride,18.85,expense
+2023-11-03,Starbucks,8.42,expense
+2023-11-09,Acme Corp Salary,5449.72,income
+2024-01-13,Gym Membership,40.23,expense
+2023-11-04,Gym Membership,56.18,expense
+2024-01-27,Shell Gas Station,47.19,expense
+2023-11-21,Trader Joe's,106.98,expense
+2024-01-19,Acme Corp Salary,5544.95,income
+2023-12-08,Shell Gas Station,38.02,expense
+2024-01-09,Comcast Internet,74.27,expense
+2024-01-05,Gym Membership,56.48,expense
+2024-01-22,Uber Ride,21.51,expense
+2024-01-10,Comcast Internet,82.05,expense
+2023-11-23,Uber Ride,17.9,expense
+2023-11-22,Comcast Internet,84.47,expense
+2023-12-07,Acme Corp Salary,6383.01,income
+2023-12-14,Starbucks,8.83,expense
+2023-11-14,Comcast Internet,83.87,expense
+2023-11-25,Amazon Purchase,64.8,expense
+2023-12-09,Acme Corp Salary,5884.99,income
+2024-01-07,Comcast Internet,80.23,expense
+2023-12-26,Trader Joe's,114.37,expense
+2023-12-03,Uber Ride,15.18,expense
+2024-01-08,Comcast Internet,71.31,expense
+2023-12-31,Trader Joe's,120.35,expense
+2024-01-15,Uber Ride,18.46,expense
+2024-01-06,Comcast Internet,70.42,expense
+2023-12-29,Starbucks,6.56,expense
+2023-11-16,Shell Gas Station,53.52,expense
+2024-01-04,Gym Membership,50.32,expense
+2023-12-01,Starbucks,6.98,expense
+2023-11-16,Uber Ride,16.9,expense
+2024-01-06,Uber Ride,14.98,expense
+2024-01-09,Comcast Internet,72.75,expense
+2023-12-15,Comcast Internet,87.68,expense
+2023-12-09,Uber Ride,17.18,expense
+2023-12-19,Trader Joe's,129.37,expense
+2023-11-17,Amazon Purchase,83.55,expense
+2023-11-05,Acme Corp Salary,6189.24,income
+2023-12-26,Trader Joe's,120.96,expense
+2024-01-30,Acme Corp Salary,5820.0,income
+2023-12-02,Starbucks,8.72,expense
+2023-11-25,Trader Joe's,120.03,expense
+2024-01-18,Amazon Purchase,66.41,expense
+2023-11-12,Acme Corp Salary,5847.89,income
+2024-01-23,Acme Corp Salary,5331.28,income
+2023-11-21,Shell Gas Station,40.51,expense
+2024-01-22,Acme Corp Salary,6353.54,income
+2024-01-27,Gym Membership,46.65,expense
+2024-01-16,Trader Joe's,132.91,expense
+2023-12-13,City Apartments Rent,1595.46,expense
+2023-11-02,Shell Gas Station,49.93,expense
+2023-12-07,Shell Gas Station,51.18,expense
+2024-01-21,Uber Ride,14.5,expense
+2023-12-30,Starbucks,8.56,expense
+2023-11-09,Gym Membership,40.82,expense
+2023-11-21,Starbucks,8.88,expense
+2023-12-17,Shell Gas Station,50.68,expense
+2023-11-10,Shell Gas Station,51.28,expense
+2023-11-23,Starbucks,6.5,expense
+2024-01-21,Starbucks,6.29,expense
+2023-11-19,City Apartments Rent,1840.49,expense
+2023-11-15,Starbucks,7.1,expense
+2023-11-08,Acme Corp Salary,5139.57,income
+2023-12-09,Comcast Internet,95.59,expense
+2024-01-18,Comcast Internet,80.47,expense
+2023-12-30,Uber Ride,17.95,expense
+2023-12-11,Gym Membership,41.77,expense
+2024-01-25,Uber Ride,20.57,expense
+2023-11-07,Shell Gas Station,42.48,expense
+2023-12-19,Shell Gas Station,44.17,expense
+2023-12-05,Comcast Internet,82.82,expense
+2023-12-31,Acme Corp Salary,5554.7,income
+2023-11-16,Trader Joe's,147.07,expense
+2023-12-26,Uber Ride,19.98,expense
+2024-01-20,Trader Joe's,106.38,expense
+2023-12-12,City Apartments Rent,1417.68,expense
+2024-01-05,Gym Membership,50.98,expense
+2023-11-26,Uber Ride,17.19,expense
+2023-11-05,Trader Joe's,110.8,expense
+2023-11-12,Uber Ride,17.33,expense
+2024-01-09,Trader Joe's,108.49,expense
+2023-11-28,Acme Corp Salary,6170.86,income
+2023-11-30,City Apartments Rent,1498.78,expense
+2024-01-03,Comcast Internet,67.1,expense
+2024-01-19,Gym Membership,54.64,expense
+2023-11-05,Uber Ride,20.4,expense
+2024-01-20,Acme Corp Salary,5591.16,income
+2024-01-01,Comcast Internet,79.97,expense
+2023-12-27,Starbucks,8.38,expense
+2024-01-13,Amazon Purchase,59.18,expense
+2023-12-01,Gym Membership,54.14,expense
+2023-11-27,Amazon Purchase,76.4,expense
+2023-12-21,Shell Gas Station,38.07,expense
+2023-11-14,Acme Corp Salary,6114.56,income
+2023-12-19,Gym Membership,53.38,expense
+2023-11-12,Amazon Purchase,82.24,expense
+2023-12-24,Gym Membership,40.97,expense
+2023-12-18,Shell Gas Station,53.13,expense
+2023-12-03,Starbucks,7.59,expense
+2023-12-11,Starbucks,8.53,expense
+2024-01-24,Amazon Purchase,80.29,expense
+2023-11-07,City Apartments Rent,1405.61,expense
+2023-12-28,Comcast Internet,72.29,expense
+2023-12-08,Comcast Internet,67.94,expense
+2023-11-18,Trader Joe's,131.45,expense
+2023-12-14,Acme Corp Salary,4673.68,income
+2024-01-07,Starbucks,7.39,expense
+2023-11-25,Starbucks,6.77,expense
+2023-12-12,Trader Joe's,145.38,expense
+2023-12-15,City Apartments Rent,1822.24,expense
+2023-11-29,Shell Gas Station,48.63,expense
+2023-11-25,Acme Corp Salary,5447.67,income
+2024-01-13,City Apartments Rent,1683.0,expense
+2023-12-25,Starbucks,7.71,expense
+2024-01-24,Acme Corp Salary,6470.96,income
+2024-01-25,Shell Gas Station,49.33,expense
+2023-11-17,Shell Gas Station,36.74,expense
+2024-01-02,Uber Ride,20.19,expense
+2023-12-22,Acme Corp Salary,4455.6,income
+2023-11-19,Trader Joe's,130.37,expense
+2023-12-21,Starbucks,7.57,expense
+2023-12-06,Uber Ride,17.15,expense
+2024-01-26,Amazon Purchase,63.66,expense
+2023-12-01,Starbucks,8.74,expense
+2023-11-29,Gym Membership,45.6,expense
+2023-11-17,Acme Corp Salary,5833.44,income
+2024-01-22,Starbucks,8.42,expense
+2024-01-21,Comcast Internet,90.53,expense
+2023-11-16,Trader Joe's,145.56,expense
+2024-01-06,City Apartments Rent,1644.79,expense
+2023-12-02,Comcast Internet,82.78,expense
+2023-12-13,City Apartments Rent,1641.98,expense
+2023-11-23,City Apartments Rent,1475.79,expense
+2023-11-17,Uber Ride,20.67,expense
+2023-11-09,Amazon Purchase,83.44,expense
+2024-01-13,Gym Membership,59.42,expense
+2023-11-30,Gym Membership,50.76,expense
+2023-11-21,Comcast Internet,64.91,expense
+2023-12-16,Amazon Purchase,61.79,expense
+2024-01-21,City Apartments Rent,1487.76,expense
+2023-12-02,Acme Corp Salary,5682.02,income
+2024-01-21,Gym Membership,56.04,expense
+2023-11-18,Starbucks,8.34,expense
+2024-01-03,Amazon Purchase,80.96,expense
+2023-11-11,Uber Ride,16.47,expense
+2023-11-30,Gym Membership,57.11,expense
+2024-01-13,Starbucks,7.52,expense
+2023-11-20,Amazon Purchase,78.72,expense
+2023-11-29,Gym Membership,57.28,expense
+2023-11-30,Comcast Internet,77.62,expense
+2023-11-09,Trader Joe's,110.81,expense
+2023-12-11,Amazon Purchase,57.33,expense
+2024-01-24,City Apartments Rent,1898.38,expense
+2023-12-15,Comcast Internet,76.91,expense
+2023-12-13,Amazon Purchase,83.4,expense
+2023-12-13,City Apartments Rent,1753.85,expense
+2024-01-02,Uber Ride,14.76,expense
+2024-01-05,Acme Corp Salary,5160.3,income
+2023-12-18,Shell Gas Station,51.69,expense
+2023-11-23,Starbucks,8.51,expense
+2024-01-16,Acme Corp Salary,6246.23,income
+2023-11-18,Shell Gas Station,44.09,expense
+2024-01-30,Shell Gas Station,46.98,expense
+2023-11-03,Trader Joe's,128.96,expense
+2024-01-08,Amazon Purchase,68.6,expense
+2023-12-07,Shell Gas Station,51.12,expense
+2024-01-13,Comcast Internet,74.63,expense
+2023-11-22,City Apartments Rent,1830.86,expense
+2024-01-18,Comcast Internet,77.22,expense
+2023-11-05,Amazon Purchase,61.15,expense
+2023-12-01,Shell Gas Station,49.73,expense
+2023-11-01,Comcast Internet,89.36,expense
+2024-01-16,Acme Corp Salary,5491.09,income
+2023-11-28,Trader Joe's,147.56,expense
+2023-12-15,Gym Membership,50.22,expense
+2024-01-02,Comcast Internet,89.6,expense
+2024-01-27,Shell Gas Station,40.25,expense
+2023-12-23,Shell Gas Station,37.86,expense
+2023-11-03,Trader Joe's,136.14,expense
+2023-12-01,Gym Membership,45.69,expense
+2023-12-14,Acme Corp Salary,6155.93,income
+2023-12-24,Starbucks,7.91,expense
+2023-11-13,Amazon Purchase,66.12,expense
+2023-11-22,Gym Membership,46.79,expense
+2023-12-15,Starbucks,6.52,expense
+2023-12-27,Gym Membership,50.41,expense
+2024-01-04,Acme Corp Salary,4815.2,income
+2023-11-18,Acme Corp Salary,5297.89,income
+2023-12-13,City Apartments Rent,1771.91,expense
+2024-01-28,Starbucks,7.21,expense
+2023-12-08,Amazon Purchase,70.71,expense
+2023-12-02,City Apartments Rent,1651.69,expense
+2023-11-09,Comcast Internet,85.42,expense
+2024-01-21,City Apartments Rent,1783.1,expense
+2023-12-22,Comcast Internet,92.63,expense
+2023-11-19,Amazon Purchase,71.06,expense
+2024-01-01,Uber Ride,19.41,expense
+2023-12-01,Trader Joe's,131.47,expense
+2023-12-05,Uber Ride,20.58,expense
+2023-11-17,Trader Joe's,122.12,expense
+2024-01-17,City Apartments Rent,1602.32,expense
+2023-12-31,Trader Joe's,126.67,expense
+2023-12-04,Gym Membership,55.92,expense
+2023-12-04,Shell Gas Station,47.64,expense
+2023-11-19,Amazon Purchase,63.78,expense
+2023-12-20,Comcast Internet,93.69,expense
+2023-12-18,Amazon Purchase,62.03,expense
+2023-12-08,City Apartments Rent,1865.92,expense
+2024-01-11,Shell Gas Station,42.32,expense
+2023-12-27,Starbucks,7.07,expense
+2024-01-13,City Apartments Rent,1913.46,expense
+2023-11-27,Amazon Purchase,61.84,expense
+2023-12-28,Acme Corp Salary,6500.21,income
+2024-01-16,City Apartments Rent,1840.29,expense
+2024-01-22,Comcast Internet,73.37,expense
+2023-12-19,Gym Membership,46.76,expense
+2023-11-21,Trader Joe's,135.54,expense
+2024-01-14,Starbucks,7.63,expense
+2024-01-15,Gym Membership,44.01,expense
+2024-01-08,Shell Gas Station,54.07,expense
+2023-11-09,Amazon Purchase,59.66,expense
+2023-11-28,Comcast Internet,65.58,expense
+2024-01-28,Gym Membership,54.38,expense
+2024-01-01,Uber Ride,15.91,expense
+2023-11-14,City Apartments Rent,1703.72,expense
+2023-11-17,Comcast Internet,83.88,expense
+2024-01-11,Starbucks,6.46,expense
+2024-01-21,City Apartments Rent,1834.9,expense
+2023-11-24,Uber Ride,14.41,expense
+2023-11-13,Uber Ride,16.18,expense
+2023-12-19,City Apartments Rent,1428.8,expense
+2024-01-25,Trader Joe's,112.12,expense
+2024-01-26,Trader Joe's,118.3,expense
+2024-01-18,Acme Corp Salary,5230.43,income
+2023-12-02,Gym Membership,57.98,expense
+2023-11-01,Trader Joe's,136.77,expense
+2023-12-31,Acme Corp Salary,6202.76,income
+2023-11-21,Comcast Internet,94.98,expense
+2023-11-17,Amazon Purchase,75.72,expense
+2023-11-16,Trader Joe's,108.76,expense
+2024-01-03,Shell Gas Station,37.94,expense
+2024-01-21,Uber Ride,19.85,expense
+2023-12-21,Gym Membership,47.05,expense
+2023-11-26,Acme Corp Salary,6511.03,income
+2023-11-20,Gym Membership,51.68,expense
+2023-11-25,Shell Gas Station,47.41,expense
+2023-11-03,Gym Membership,52.54,expense
+2023-11-16,Gym Membership,57.31,expense
+2023-12-20,Trader Joe's,107.87,expense
+2024-01-26,Starbucks,6.73,expense
+2023-12-06,Trader Joe's,103.97,expense
+2023-12-02,City Apartments Rent,1402.59,expense
+2024-01-09,Shell Gas Station,53.45,expense
+2023-11-27,City Apartments Rent,1728.1,expense
+2023-12-10,Shell Gas Station,52.69,expense
+2023-11-16,Comcast Internet,65.31,expense
+2023-11-02,Trader Joe's,110.81,expense
+2023-11-10,Gym Membership,59.75,expense
+2023-11-27,Comcast Internet,93.59,expense
+2023-12-18,Uber Ride,15.68,expense
+2024-01-06,Acme Corp Salary,5974.88,income
+2023-11-23,Uber Ride,16.67,expense
+2024-01-18,Amazon Purchase,61.61,expense
+2023-11-09,Starbucks,6.62,expense
+2024-01-26,Comcast Internet,66.45,expense
+2023-12-13,Starbucks,8.3,expense
+2023-11-23,Uber Ride,17.64,expense
+2024-01-21,Comcast Internet,67.03,expense
+2024-01-10,Amazon Purchase,83.89,expense
+2023-12-19,Shell Gas Station,44.94,expense
+2024-01-15,Starbucks,7.75,expense
+2023-12-27,City Apartments Rent,1369.52,expense
+2023-12-02,City Apartments Rent,1429.94,expense
+2023-11-24,Acme Corp Salary,5728.42,income
+2023-12-01,Amazon Purchase,58.43,expense
+2024-01-23,Shell Gas Station,50.76,expense
+2024-01-27,Trader Joe's,125.31,expense
+2024-01-03,Starbucks,7.2,expense
+2023-11-13,Shell Gas Station,46.01,expense
+2023-12-21,Uber Ride,16.98,expense
+2023-12-12,Trader Joe's,111.15,expense
+2023-11-27,Uber Ride,17.02,expense
+2023-11-09,Uber Ride,19.98,expense
+2023-12-10,Trader Joe's,105.73,expense
+2023-11-23,Starbucks,7.06,expense
+2024-01-25,Amazon Purchase,78.12,expense
+2023-12-25,Shell Gas Station,38.92,expense
+2023-12-04,Starbucks,6.63,expense
+2023-12-25,Amazon Purchase,79.79,expense
+2023-12-10,Uber Ride,17.73,expense
+2024-01-30,Shell Gas Station,47.98,expense
+2023-11-12,Uber Ride,17.71,expense
+2023-11-24,Gym Membership,58.09,expense
+2023-11-21,Comcast Internet,83.09,expense
+2023-12-05,Uber Ride,20.41,expense

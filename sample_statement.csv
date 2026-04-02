@@ -1,0 +1,10 @@
+date,description,amount,type
+2023-11-01,Acme Corp Salary,5500,income
+2023-11-02,City Apartments Rent,1600,expense
+2023-11-04,Trader Joe's,125.50,expense
+2023-11-08,Comcast Internet,80,expense
+2023-11-12,Shell Gas Station,45.20,expense
+2023-11-15,Starbucks,12.50,expense
+2023-11-20,Local Gym,50,expense
+2023-11-22,Amazon Purchases,210.30,expense
+2023-11-28,Uber Rides,35.80,expense
