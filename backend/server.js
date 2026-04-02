@@ -19,36 +19,21 @@ mongoose.connect(process.env.MONGO_URI)
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim().replace(/\/$/, '')) 
-  : ['http://localhost:5173'];
-
-console.log('CORS Allowed Origins:', allowedOrigins);
-
+// 1. CORS MUST BE FIRST (Mirror Mode)
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Normalize incoming origin
-    const normalizedOrigin = origin.trim().replace(/\/$/, '');
-    
-    const isAllowed = allowedOrigins.indexOf(normalizedOrigin) !== -1 || process.env.NODE_ENV !== 'production';
-    
-    if (!isAllowed) {
-      console.log(`CORS Blocked: ${normalizedOrigin}`);
-      return callback(null, false);
-    }
-    
+    // Mirror the origin if it exists, or allow (for mobile/curl)
     callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
+
+// 2. Body Parsers
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Routes
+// 3. Routes
 import { protect } from './middleware/auth.js';
 
 app.use('/api/analyze', protect, analyzeRoutes);
