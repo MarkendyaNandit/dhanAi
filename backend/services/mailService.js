@@ -31,11 +31,15 @@ const getTransporter = async () => {
     } else {
         transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
+            port: 587,
+            secure: false,
+            requireTLS: true,
             auth: {
                 user: process.env.SMTP_USER ? process.env.SMTP_USER.trim() : '',
                 pass: process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/['"]/g, '').replace(/\s+/g, '') : ''
+            },
+            tls: {
+                rejectUnauthorized: false
             },
             connectionTimeout: 10000, // 10s to establish connection
             socketTimeout: 15000,     // 15s for socket inactivity
