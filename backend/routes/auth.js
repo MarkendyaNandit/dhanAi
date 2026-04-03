@@ -48,19 +48,14 @@ router.post('/send-otp', async (req, res) => {
         ]);
 
         if ((mailResult && mailResult.error) || (mailResult && mailResult.previewUrl)) {
-            // If Render's firewall drops the packet entirely or variables are missing,
-            // DO NOT throw an error to the frontend. Instead, silently enable a master fallback code.
-            otps[email].code = "123456";
-            console.log(`[AUTH-BYPASS] Mail Server blocked. Assigned emergency OTP '123456' for ${email}`);
+            return res.status(500).json({ error: `Mail Connection Failed: ${mailResult.error || 'Authentication error'}. Please check if Render blocked the connection.` });
         }
 
-        console.log(`[AUTH] OTP request processed for ${email}`);
-        res.json({ message: 'OTP processed successfully.' });
+        console.log(`[AUTH] OTP delivery complete for ${email}`);
+        res.json({ message: 'OTP sent. Please check your email and phone.' });
     } catch (err) {
         console.error(`[AUTH] System failure dispatching OTP for ${email}:`, err);
-        // Even on complete failure, allow the frontend to proceed
-        otps[email].code = "123456";
-        res.json({ message: 'Emergency mode active.' });
+        return res.status(500).json({ error: 'System failed to send OTP reliably.' });
     }
 });
 
