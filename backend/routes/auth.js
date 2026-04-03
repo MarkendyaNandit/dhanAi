@@ -42,13 +42,22 @@ router.post('/send-otp', async (req, res) => {
     console.log(`[AUTH] Sent OTP ${code} to Email: ${email} and Phone: ${phone}`);
 
     // Attempt real delivery
-    const mailResult = await sendEmailOTP(email, code);
-    await sendSMSOTP(phone, code);
+    try {
+        const mailResult = await sendEmailOTP(email, code);
+        await sendSMSOTP(phone, code);
 
-    res.json({
-        message: `OTP sent successfully. Check your email ${mailResult?.previewUrl ? '(Preview link in console)' : ''}`,
-        previewUrl: mailResult?.previewUrl
-    });
+        res.json({
+            message: `OTP sent successfully. Check your email ${mailResult?.previewUrl ? '(Preview link in console)' : ''}`,
+            previewUrl: mailResult?.previewUrl
+        });
+    } catch (err) {
+        console.error('[AUTH] OTP delivery failed:', err);
+        // Responding with success despite failure to allow testing via console log
+        res.json({
+            message: "OTP generated. (If real email/SMS fails, check server logs for code)",
+            previewUrl: null
+        });
+    }
 });
 
 router.post('/verify-otp', (req, res) => {

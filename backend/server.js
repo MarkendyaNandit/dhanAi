@@ -42,6 +42,11 @@ app.use('/api/forecast', protect, forecastRoutes);
 app.use('/api/auth', authRoutes);
 
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 // Root endpoint for testing
 app.get('/', (req, res) => {
   res.send('AI Bank Statement Analyzer API is running...');

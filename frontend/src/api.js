@@ -1,4 +1,13 @@
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://dhanai.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+
+const safeParseJson = async (response) => {
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  const text = await response.text();
+  throw new Error(text.substring(0, 100) || 'Server returned an error');
+};
 
 const getAuthHeaders = (isFormData = false) => {
   const token = localStorage.getItem('token');
@@ -24,11 +33,11 @@ export const uploadStatement = async (file, userId) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await safeParseJson(response).catch(() => ({ error: 'Failed to upload' }));
     throw new Error(errorData.error || 'Failed to upload statement');
   }
 
-  return response.json();
+  return safeParseJson(response);
 };
 
 export const fetchHistory = async (userId) => {
@@ -38,7 +47,7 @@ export const fetchHistory = async (userId) => {
     if (!response.ok) {
       throw new Error('Failed to fetch history');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const fetchForecast = async (statementId, transactions = null, totalIncome = 0, totalExpense = 0) => {
@@ -48,7 +57,7 @@ export const fetchForecast = async (statementId, transactions = null, totalIncom
         body: JSON.stringify({ statementId, transactions, totalIncome, totalExpense })
     });
     if (!response.ok) throw new Error('Failed to fetch forecast');
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const sendChatMessage = async (message, statementId, context = null) => {
@@ -58,7 +67,7 @@ export const sendChatMessage = async (message, statementId, context = null) => {
         body: JSON.stringify({ message, statementId, context })
     });
     if (!response.ok) throw new Error('Failed to send message');
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const login = async (email, password) => {
@@ -68,10 +77,10 @@ export const login = async (email, password) => {
         body: JSON.stringify({ email, password })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Login failed' }));
         throw new Error(err.error || 'Login failed');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const sendOTP = async (email, phone) => {
@@ -81,10 +90,10 @@ export const sendOTP = async (email, phone) => {
         body: JSON.stringify({ email, phone })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Failed to send OTP' }));
         throw new Error(err.error || 'Failed to send OTP');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const verifyOTP = async (email, code) => {
@@ -94,10 +103,10 @@ export const verifyOTP = async (email, code) => {
         body: JSON.stringify({ email, code })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Invalid OTP' }));
         throw new Error(err.error || 'Invalid OTP');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const syncTransactions = async () => {
@@ -105,7 +114,7 @@ export const syncTransactions = async () => {
         headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Sync failed');
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const updateOverview = async (transactions, totalIncome, totalExpense) => {
@@ -115,7 +124,7 @@ export const updateOverview = async (transactions, totalIncome, totalExpense) =>
         body: JSON.stringify({ transactions, totalIncome, totalExpense })
     });
     if (!response.ok) throw new Error('Failed to update overview');
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const register = async (name, email, password, phone) => {
@@ -125,10 +134,10 @@ export const register = async (name, email, password, phone) => {
         body: JSON.stringify({ name, email, password, phone })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Registration failed' }));
         throw new Error(err.error || 'Registration failed');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const updateProfile = async (userId, updates) => {
@@ -138,10 +147,10 @@ export const updateProfile = async (userId, updates) => {
         body: JSON.stringify({ userId, ...updates })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Failed to update profile' }));
         throw new Error(err.error || 'Failed to update profile');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const getGoogleAuthUrl = async () => {
@@ -149,7 +158,7 @@ export const getGoogleAuthUrl = async () => {
         headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch Auth URL');
-    return response.json();
+    return safeParseJson(response);
 };
 
 export const linkGoogleAccount = async (code, userId) => {
@@ -159,9 +168,9 @@ export const linkGoogleAccount = async (code, userId) => {
         body: JSON.stringify({ code, userId })
     });
     if (!response.ok) {
-        const err = await response.json();
+        const err = await safeParseJson(response).catch(() => ({ error: 'Failed to link Gmail' }));
         throw new Error(err.error || 'Failed to link Gmail');
     }
-    return response.json();
+    return safeParseJson(response);
 };
 
