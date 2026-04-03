@@ -69,7 +69,7 @@ const Register = () => {
                   value={name} 
                   onChange={(e) => setName(e.target.value)} 
                   required 
-                  placeholder="e.g. John Doe"
+                  placeholder="Enter your name"
                 />
               </div>
               <div className="flex-col gap-2">
@@ -81,7 +81,7 @@ const Register = () => {
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  placeholder="e.g. user@example.com"
+                  placeholder="Enter your email"
                 />
               </div>
               <div className="flex-col gap-2">
@@ -93,7 +93,7 @@ const Register = () => {
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   required 
-                  placeholder="e.g. +1 234 567 890"
+                  placeholder="Enter your phone number"
                 />
               </div>
               <div className="flex-col gap-2">
@@ -105,7 +105,7 @@ const Register = () => {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
-                  placeholder="Minimum 6 characters"
+                  placeholder="Enter your password"
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
