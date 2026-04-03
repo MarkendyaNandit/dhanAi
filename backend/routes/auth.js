@@ -13,7 +13,7 @@ const router = express.Router();
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:5173/auth/google/callback'
+  `${process.env.FRONTEND_URL || 'http://localhost:5174'}/auth/google/callback`
 );
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_development';
@@ -41,10 +41,12 @@ router.post('/send-otp', async (req, res) => {
 
     console.log(`[AUTH] Sent OTP ${code} to Email: ${email} and Phone: ${phone}`);
 
-    // Attempt real delivery
+    // Attempt real delivery in parallel to reduce wait time
     try {
-        const mailResult = await sendEmailOTP(email, code);
-        await sendSMSOTP(phone, code);
+        const [mailResult, smsResult] = await Promise.all([
+            sendEmailOTP(email, code),
+            sendSMSOTP(phone, code)
+        ]);
 
         res.json({
             message: `OTP sent successfully. Check your email ${mailResult?.previewUrl ? '(Preview link in console)' : ''}`,
@@ -83,6 +85,12 @@ router.post('/register', authLimiter, async (req, res) => {
     email = email.toLowerCase().trim();
 
     try {
+        // 1. Verify OTP exists and is valid
+        const otpRecord = otps[email];
+        if (!otpRecord || otpRecord.expires < Date.now()) {
+            return res.status(400).json({ error: 'Please verify OTP before registering' });
+        }
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: 'User already exists' });

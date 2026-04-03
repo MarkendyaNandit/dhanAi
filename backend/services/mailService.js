@@ -2,36 +2,45 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
+let transporter;
+
+/**
+ * Initialize the mail transporter once to avoid recreation overhead
+ */
+const getTransporter = async () => {
+    if (transporter) return transporter;
+
+    // For demo/dev purposes, use Ethereal (test account) if no SMTP credentials are provided
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.log('[MAIL] No SMTP credentials found. Creating Ethereal test account...');
+        const testAccount = await nodemailer.createTestAccount();
+        transporter = nodemailer.createTransport({
+            host: "smtp.ethereal.email",
+            port: 587,
+            secure: false, 
+            auth: {
+                user: testAccount.user, 
+                pass: testAccount.pass, 
+            },
+        });
+    } else {
+        transporter = nodemailer.createTransport({
+            service: 'gmail', // or your preferred service
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+            }
+        });
+    }
+    return transporter;
+};
+
 /**
  * Send OTP via Email using Nodemailer
  */
 export const sendEmailOTP = async (email, code) => {
     try {
-        let transporter;
-
-        // For demo/dev purposes, use Ethereal (test account) if no SMTP credentials are provided
-        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            console.log('[MAIL] No SMTP credentials found. Creating Ethereal test account...');
-            const testAccount = await nodemailer.createTestAccount();
-            transporter = nodemailer.createTransport({
-                host: "smtp.ethereal.email",
-                port: 587,
-                secure: false, 
-                auth: {
-                    user: testAccount.user, 
-                    pass: testAccount.pass, 
-                },
-            });
-        } else {
-            transporter = nodemailer.createTransport({
-                service: 'gmail', // or your preferred service
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS
-                }
-            });
-        }
-
+        const transporter = await getTransporter();
         const info = await transporter.sendMail({
             from: '"SmartFinance AI" <no-reply@smartfinance.ai>',
             to: email,
