@@ -25,11 +25,14 @@ const getTransporter = async () => {
         });
     } else {
         transporter = nodemailer.createTransport({
-            service: 'gmail', // or your preferred service
+            service: 'gmail',
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
-            }
+            },
+            connectionTimeout: 10000, // 10s to establish connection
+            socketTimeout: 15000,     // 15s for socket inactivity
+            greetingTimeout: 10000    // 10s for greeting
         });
     }
     return transporter;

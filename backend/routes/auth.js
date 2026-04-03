@@ -39,27 +39,26 @@ router.post('/send-otp', async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     otps[email] = { code, phone, expires: Date.now() + 600000 };
 
-    console.log(`[AUTH] Sent OTP ${code} to Email: ${email} and Phone: ${phone}`);
+    console.log(`[AUTH] Generated OTP ${code} for Email: ${email} | Phone: ${phone}`);
 
-    // Attempt real delivery in parallel to reduce wait time
-    try {
-        const [mailResult, smsResult] = await Promise.all([
-            sendEmailOTP(email, code),
-            sendSMSOTP(phone, code)
-        ]);
+    // ✅ Fire-and-forget: respond instantly, send OTP in background
+    res.json({ message: 'OTP sent. Please check your email and phone.' });
 
-        res.json({
-            message: `OTP sent successfully. Check your email ${mailResult?.previewUrl ? '(Preview link in console)' : ''}`,
-            previewUrl: mailResult?.previewUrl
-        });
-    } catch (err) {
-        console.error('[AUTH] OTP delivery failed:', err);
-        // Responding with success despite failure to allow testing via console log
-        res.json({
-            message: "OTP generated. (If real email/SMS fails, check server logs for code)",
-            previewUrl: null
-        });
-    }
+    // Deliver email & SMS in background without blocking the response
+    Promise.all([
+        sendEmailOTP(email, code),
+        sendSMSOTP(phone, code)
+    ])
+    .then(([mailResult]) => {
+        if (mailResult?.previewUrl) {
+            console.log(`[MAIL] Preview URL: ${mailResult.previewUrl}`);
+        }
+        console.log(`[AUTH] OTP delivery complete for ${email}`);
+    })
+    .catch(err => {
+        console.error(`[AUTH] Background OTP delivery failed for ${email}:`, err.message);
+        console.log(`[AUTH-FALLBACK] To: ${email} | Code: ${code}`);
+    });
 });
 
 router.post('/verify-otp', (req, res) => {
