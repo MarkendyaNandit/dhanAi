@@ -27,8 +27,8 @@ const getTransporter = async () => {
         transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+                user: process.env.SMTP_USER ? process.env.SMTP_USER.trim() : '',
+                pass: process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/['"]/g, '').replace(/\s+/g, '') : ''
             },
             connectionTimeout: 10000, // 10s to establish connection
             socketTimeout: 15000,     // 15s for socket inactivity
