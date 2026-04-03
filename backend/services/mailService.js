@@ -1,5 +1,10 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import dns from 'dns';
+
+// Force Node.js to prioritize IPv4. Render often blackholes IPv6 SMTP traffic, causing ETIMEDOUT.
+dns.setDefaultResultOrder('ipv4first');
+
 dotenv.config();
 
 let transporter;
