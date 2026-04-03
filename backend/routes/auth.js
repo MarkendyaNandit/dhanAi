@@ -41,24 +41,26 @@ router.post('/send-otp', async (req, res) => {
 
     console.log(`[AUTH] Generated OTP ${code} for Email: ${email} | Phone: ${phone}`);
 
-    // ✅ Fire-and-forget: respond instantly, send OTP in background
-    res.json({ message: 'OTP sent. Please check your email and phone.' });
+    try {
+        const [mailResult] = await Promise.all([
+            sendEmailOTP(email, code),
+            sendSMSOTP(phone, code)
+        ]);
 
-    // Deliver email & SMS in background without blocking the response
-    Promise.all([
-        sendEmailOTP(email, code),
-        sendSMSOTP(phone, code)
-    ])
-    .then(([mailResult]) => {
-        if (mailResult?.previewUrl) {
-            console.log(`[MAIL] Preview URL: ${mailResult.previewUrl}`);
+        if (mailResult && mailResult.error) {
+            return res.status(500).json({ error: `Mail Server Error: ${mailResult.error}. Check SMTP_PASS or credentials on Render.` });
         }
+        
+        if (mailResult && mailResult.previewUrl) {
+            return res.status(500).json({ error: `SMTP Authentication Missing on Render! Email sent to fake Ethereal account. Please add SMTP_USER and SMTP_PASS variables to Render.` });
+        }
+
         console.log(`[AUTH] OTP delivery complete for ${email}`);
-    })
-    .catch(err => {
-        console.error(`[AUTH] Background OTP delivery failed for ${email}:`, err.message);
-        console.log(`[AUTH-FALLBACK] To: ${email} | Code: ${code}`);
-    });
+        res.json({ message: 'OTP sent. Please check your email and phone.' });
+    } catch (err) {
+        console.error(`[AUTH] System failure dispatching OTP for ${email}:`, err);
+        return res.status(500).json({ error: 'System failed to send OTP reliably. Action aborted.' });
+    }
 });
 
 router.post('/verify-otp', (req, res) => {
