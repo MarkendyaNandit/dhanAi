@@ -13,6 +13,31 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
 
   const remaining = totalIncome - totalExpense;
 
+  // Build a rich insight text with fallbacks
+  const insightText = (() => {
+    const dash = insights?.dashboard;
+    if (dash && dash.length > 30) return dash;
+    if (overview && overview.length > 30) return overview;
+    // Compute from raw numbers
+    if (totalIncome > 0 || totalExpense > 0) {
+      const savingsRate = totalIncome > 0 ? ((remaining / totalIncome) * 100).toFixed(1) : 0;
+      const topCat = transactions && transactions.length > 0
+        ? Object.entries(
+            transactions.filter(t => t.type === 'expense').reduce((acc, t) => {
+              const cat = t.category || 'Other';
+              acc[cat] = (acc[cat] || 0) + t.amount;
+              return acc;
+            }, {})
+          ).sort((a, b) => b[1] - a[1])[0]
+        : null;
+      const fmt = (n) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0);
+      return remaining >= 0
+        ? `Savings rate: ${savingsRate}% — You have ₹${fmt(remaining)} surplus this period.${topCat ? ` Top spending category: ${topCat[0]} (₹${fmt(topCat[1])}).` : ''} Keep it up!`
+        : `⚠️ Overspending: Expenses exceed income by ₹${fmt(Math.abs(remaining))}.${topCat ? ` Largest cost: ${topCat[0]} (₹${fmt(topCat[1])}).` : ''} Review non-essentials.`;
+    }
+    return null;
+  })();
+
   return (
     <div style={{ animation: 'fadeInUp 0.8s ease-out' }}>
       
@@ -71,7 +96,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
 
           <AIInsight 
             title="Financial Health Overview" 
-            insight={insights?.dashboard || overview} 
+            insight={insightText} 
           />
         </div>
 

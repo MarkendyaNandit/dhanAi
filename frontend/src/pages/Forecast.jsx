@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { fetchForecast } from '../api';
 import AIInsight from '../components/AIInsight';
 
@@ -51,39 +51,103 @@ const Forecast = ({ data, currency = 'USD' }) => {
         )}
 
         {forecast && !loading && (
-            <div className="grid gap-6">
-                <AIInsight 
-                  title="Forecast Analysis" 
-                  insight={forecast.overview} 
-                  color="var(--accent-secondary)"
-                />
-                
-                <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                    <div className="glass-card stat-card">
-                       <span className="stat-label">Predicted Spends</span>
-                       <span className="stat-value expense">{formatCurrency(forecast.predictedExpense)}</span>
-                    </div>
-                    <div className="glass-card stat-card">
-                       <span className="stat-label">Predicted Savings</span>
-                       <span className="stat-value income">{formatCurrency(forecast.predictedSavings)}</span>
-                    </div>
-                </div>
-
-                <div className="glass-card">
-                    <h3 className="section-title">Category Breakdown</h3>
-                    <div className="transactions-container">
-                        {forecast.categories?.map((cat, idx) => (
-                            <div key={idx} className="transaction-item">
-                                <span className="transaction-desc">{cat.name}</span>
-                                <span className="transaction-amount expense">{formatCurrency(cat.amount)}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+            <ForecastContent
+                forecast={forecast}
+                data={data}
+                formatCurrency={formatCurrency}
+            />
         )}
     </div>
   );
+};
+
+// Separate component to cleanly use hooks
+const ForecastContent = ({ forecast, data, formatCurrency }) => {
+    // Build category breakdown from backend data or fall back to raw transactions
+    const categoryBreakdown = useMemo(() => {
+        const cats = forecast?.categories;
+        if (cats && cats.length > 0) return cats;
+
+        // Fallback: compute from raw transactions
+        if (!data?.transactions) return [];
+        const map = {};
+        data.transactions.filter(t => t.type === 'expense').forEach(t => {
+            const cat = t.category || 'Other';
+            map[cat] = (map[cat] || 0) + t.amount;
+        });
+        return Object.entries(map)
+            .sort((a, b) => b[1] - a[1])
+            .map(([name, amount]) => ({ name, amount: parseFloat((amount * 1.05).toFixed(2)) }));
+    }, [forecast, data]);
+
+    const maxCategoryAmount = useMemo(
+        () => categoryBreakdown.reduce((m, c) => Math.max(m, c.amount), 1),
+        [categoryBreakdown]
+    );
+
+    // Derive a rich insight string from any available field
+    const insightText = useMemo(() => {
+        if (!forecast) return null;
+        if (forecast.overview && forecast.overview.length > 30) return forecast.overview;
+        if (forecast.insights?.forecast && forecast.insights.forecast.length > 10) return forecast.insights.forecast;
+
+        // Build from numbers as last resort
+        const top = categoryBreakdown[0];
+        if (forecast.predictedExpense > 0) {
+            return `📊 Next month forecast: ${formatCurrency(forecast.predictedExpense)} in expenses. ${top ? `Largest category: ${top.name} (${formatCurrency(top.amount)}).` : ''} Estimated savings: ${formatCurrency(Math.max(0, forecast.predictedSavings))}.`;
+        }
+        return 'Forecast analysis complete.';
+    }, [forecast, categoryBreakdown, formatCurrency]);
+
+    return (
+        <div className="grid gap-6">
+            <AIInsight
+                title="Forecast Analysis"
+                insight={insightText}
+                color="var(--accent-secondary)"
+            />
+
+            <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                <div className="glass-card stat-card">
+                    <span className="stat-label">Predicted Spends</span>
+                    <span className="stat-value expense">{formatCurrency(forecast.predictedExpense)}</span>
+                </div>
+                <div className="glass-card stat-card">
+                    <span className="stat-label">Predicted Savings</span>
+                    <span className={`stat-value ${forecast.predictedSavings >= 0 ? 'income' : 'expense'}`}>
+                        {formatCurrency(forecast.predictedSavings)}
+                    </span>
+                </div>
+            </div>
+
+            <div className="glass-card">
+                <h3 className="section-title">Category Breakdown</h3>
+                {categoryBreakdown.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)', padding: '1rem 0' }}>No expense categories found.</p>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', marginTop: '0.75rem' }}>
+                        {categoryBreakdown.map((cat, idx) => (
+                            <div key={idx}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{cat.name}</span>
+                                    <span style={{ fontWeight: 600, color: 'var(--danger)' }}>{formatCurrency(cat.amount)}</span>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '99px', height: '6px', overflow: 'hidden' }}>
+                                    <div style={{
+                                        height: '100%',
+                                        width: `${Math.min(100, (cat.amount / maxCategoryAmount) * 100).toFixed(1)}%`,
+                                        background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
+                                        borderRadius: '99px',
+                                        transition: 'width 0.6s ease'
+                                    }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default Forecast;

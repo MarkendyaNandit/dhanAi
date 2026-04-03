@@ -37,6 +37,82 @@ const runPythonEngine = (transactions) => {
     }
 };
 
+// ─── JavaScript Fallback: Rich Insight Generator ───────────────────────────
+const generateJSInsights = (transactions, totalIncome, totalExpense) => {
+    const categoryMap = {};
+    transactions.filter(t => t.type === 'expense').forEach(t => {
+        const cat = t.category || 'Other';
+        categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
+    });
+
+    const categoryEntries = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+    const topCat = categoryEntries[0];
+    const savings = totalIncome - totalExpense;
+    const savingsRate = totalIncome > 0 ? (savings / totalIncome * 100).toFixed(1) : 0;
+    const expenseRatio = totalIncome > 0 ? ((totalExpense / totalIncome) * 100).toFixed(0) : 100;
+    const fmt = (n) => parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+    const topCatStr = topCat ? `${topCat[0]} (₹${fmt(topCat[1])})` : 'General Expenses';
+    const top3 = categoryEntries.slice(0, 3).map(([k, v]) => `${k}: ₹${fmt(v)}`).join(', ');
+
+    const dashboardMsg = savings > 0
+        ? `Savings rate: ${savingsRate}% — You're saving ₹${fmt(savings)} this period. Top spending: ${topCatStr}. Spending ${expenseRatio}% of income. ${top3 ? `Breakdown: ${top3}.` : ''}`
+        : `⚠️ Overspending Alert: Expenses exceed income by ₹${fmt(Math.abs(savings))} (${expenseRatio}% of income). Biggest cost: ${topCatStr}. Consider cutting non-essentials.`;
+
+    const transactionsMsg = `You recorded ${transactions.length} transactions. ${topCatStr} is your highest spend. ${
+        totalExpense > totalIncome * 0.8
+            ? 'Expense-to-income ratio is high—review recurring costs.'
+            : 'Spending pattern looks healthy overall.'
+    } ${categoryEntries.length > 1 ? `Other notable areas: ${categoryEntries.slice(1, 3).map(([k,v]) => `${k} ₹${fmt(v)}`).join(', ')}.` : ''}`;
+
+    const forecastMsg = savings > 0
+        ? `📈 Projected next-month expenses: ₹${fmt(totalExpense * 1.05)} (slight upward trend). Largest projected cost: ${topCatStr}. Potential savings: ₹${fmt(savings * 0.95)}.`
+        : `📉 Projection Alert: Without changes, next-month deficit may reach ₹${fmt(Math.abs(savings) * 1.05)}. Prioritise reducing ${topCat ? topCat[0] : 'top'} spend.`;
+
+    const goalsMsg = savings > 0
+        ? `Goal Ready: Monthly surplus of ₹${fmt(savings)}. Reducing ${topCat ? topCat[0] : 'top expenses'} by 10% frees ₹${fmt((topCat?.[1] || 0) * 0.1)} more. A good savings target is 20% of income (₹${fmt(totalIncome * 0.2)}).`
+        : `Budget Fix Needed: Expenses exceed income — set a strict budget before new goals. Focus cuts on: ${topCatStr}.`;
+
+    return {
+        dashboard: dashboardMsg,
+        transactions: transactionsMsg,
+        forecast: forecastMsg,
+        goals: goalsMsg,
+        overview: dashboardMsg
+    };
+};
+
+// ─── JavaScript Fallback: Forecast Category Builder ──────────────────────────
+const generateJSForecast = (context) => {
+    const transactions = context.transactions || [];
+    const expenses = transactions.filter(t => t.type === 'expense');
+    const totalIncome = context.totalIncome || 0;
+
+    const categoryMap = {};
+    expenses.forEach(t => {
+        const cat = t.category || 'Other';
+        categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
+    });
+
+    const categories = Object.entries(categoryMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, amount]) => ({
+            name,
+            amount: parseFloat((amount * 1.05).toFixed(2)) // slight upward trend projection
+        }));
+
+    const predictedExpense = parseFloat(categories.reduce((s, c) => s + c.amount, 0).toFixed(2));
+    const predictedSavings = parseFloat((totalIncome - predictedExpense).toFixed(2));
+    const topCat = categories[0];
+    const fmt = (n) => parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+    const overview = predictedExpense > totalIncome
+        ? `⚠️ Spending Alert: Projected expenses ₹${fmt(predictedExpense)} will exceed income. Top cost: ${topCat?.name || 'Other'} at ₹${fmt(topCat?.amount || 0)}. Act now to reduce non-essentials.`
+        : `📊 Next month forecast: ₹${fmt(predictedExpense)} in expenses. Largest category: ${topCat?.name || 'Other'} (₹${fmt(topCat?.amount || 0)}). Estimated savings: ₹${fmt(Math.max(0, predictedSavings))}.`;
+
+    return { overview, predictedExpense, predictedSavings, categories };
+};
+
 // TRAINING DATA: Extracted from finance_transactions_500.csv
 const TRAINING_DATA_MAP = {
     "Acme Corp Salary": "Salary",
@@ -123,8 +199,12 @@ export const analyzeStatementData = async (fileContent) => {
                         transactions: pythonResult.transactions || transactions
                     };
                 } catch (aiErr) {
+                    // Python failed — generate rich insights in JavaScript
+                    const jsInsights = generateJSInsights(transactions, totalIncome, totalExpense);
                     return {
-                        overview: "Analysis complete using local heuristics. [Local Model]",
+                        overview: jsInsights.dashboard,
+                        insights: jsInsights,
+                        essentials: [],
                         totalIncome,
                         totalExpense,
                         transactions
@@ -165,25 +245,28 @@ export const generateForecast = async (context) => {
         const pythonResult = runPythonEngine(context.transactions);
 
         if (pythonResult.error || !pythonResult.forecast) {
-            return {
-                overview: "Local forecast generated based on historical trends.",
-                predictedExpense: context.totalExpense || 0,
-                predictedSavings: (context.totalIncome || 0) - (context.totalExpense || 0),
-                categories: []
-            };
+            // Python failed — build forecast from JS
+            return generateJSForecast(context);
         }
 
-        return {
+        const forecastData = {
             ...pythonResult.forecast,
             overview: pythonResult.insights?.forecast || pythonResult.overview || "High-accuracy local forecast complete."
         };
+
+        // Ensure categories always has data even if Python gives empty array
+        if (!forecastData.categories || forecastData.categories.length === 0) {
+            const jsForecast = generateJSForecast(context);
+            forecastData.categories = jsForecast.categories;
+            if (!forecastData.overview || forecastData.overview.length < 30) {
+                forecastData.overview = jsForecast.overview;
+            }
+        }
+
+        return forecastData;
     } catch (error) {
-        return {
-            overview: "Forecast generation using local models.",
-            predictedExpense: 0,
-            predictedSavings: 0,
-            categories: []
-        };
+        // Catch-all: always return something useful
+        return generateJSForecast(context);
     }
 };
 

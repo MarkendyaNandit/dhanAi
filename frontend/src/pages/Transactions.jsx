@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AIInsight from '../components/AIInsight';
 
 const Transactions = ({ data, currency = 'USD' }) => {
@@ -21,6 +21,32 @@ const Transactions = ({ data, currency = 'USD' }) => {
     const formatCurrency = (val) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val);
     };
+
+    // Build rich insight text with JS fallback
+    const insightText = useMemo(() => {
+        const backendInsight = data.insights?.transactions;
+        if (backendInsight && backendInsight.length > 20) return backendInsight;
+
+        // Compute from raw transactions
+        const expenses = data.transactions.filter(t => t.type === 'expense');
+        const incomes = data.transactions.filter(t => t.type === 'income');
+        const categoryMap = {};
+        expenses.forEach(t => {
+            const cat = t.category || 'Other';
+            categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
+        });
+        const sorted = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+        const topCat = sorted[0];
+        const fmt = (n) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0);
+        const totalExp = expenses.reduce((s, t) => s + t.amount, 0);
+        const totalInc = incomes.reduce((s, t) => s + t.amount, 0);
+        const top3 = sorted.slice(0, 3).map(([k, v]) => `${k} (₹${fmt(v)})`).join(', ');
+
+        return `You have ${data.transactions.length} total transactions — ${incomes.length} income & ${expenses.length} expenses. ` +
+            (topCat ? `Top spending category: ${topCat[0]} at ₹${fmt(topCat[1])} (${totalExp > 0 ? ((topCat[1] / totalExp) * 100).toFixed(0) : 0}% of total spend). ` : '') +
+            (top3 ? `Breakdown: ${top3}. ` : '') +
+            (totalExp > totalInc * 0.8 ? '⚠️ High expense-to-income ratio — review recurring costs.' : '✅ Spending pattern looks healthy.');
+    }, [data]);
 
     return (
         <div className="animation-fade-in">
@@ -51,7 +77,7 @@ const Transactions = ({ data, currency = 'USD' }) => {
 
             <AIInsight 
                 title="Spending Habit Analysis" 
-                insight={data.insights?.transactions} 
+                insight={insightText} 
                 color="var(--warning)"
             />
 
