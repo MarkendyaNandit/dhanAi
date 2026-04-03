@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+export const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://dhanai.onrender.com/api';
 
 const safeParseJson = async (response) => {
   const contentType = response.headers.get('content-type');
@@ -173,4 +173,18 @@ export const linkGoogleAccount = async (code, userId) => {
     }
     return safeParseJson(response);
 };
+
+export const parseText = async (text) => {
+    const response = await fetch(`${API_URL}/analyze/parse-text`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ text })
+    });
+    if (!response.ok) {
+        const err = await safeParseJson(response).catch(() => ({ error: 'Failed to parse text' }));
+        throw new Error(err.error || 'Failed to parse text');
+    }
+    return safeParseJson(response);
+};
+
 

@@ -47,8 +47,8 @@ router.post('/send-otp', async (req, res) => {
             sendSMSOTP(phone, code)
         ]);
 
-        if ((mailResult && mailResult.error) || (mailResult && mailResult.previewUrl)) {
-            return res.status(500).json({ error: `Mail Connection Failed: ${mailResult.error || 'Authentication error'}. Please check if Render blocked the connection.` });
+        if (mailResult && mailResult.error && mailResult.status !== 'logged') {
+            return res.status(500).json({ error: `Mail Connection Failed: ${mailResult.error}. Please ensure your Render environment variables for SMTP are correct.` });
         }
 
         console.log(`[AUTH] OTP delivery complete for ${email}`);

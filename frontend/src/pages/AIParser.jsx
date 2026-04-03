@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { parseText } from '../api';
 
 const AIParser = ({ onAddTransactions }) => {
     const [text, setText] = useState('');
@@ -11,13 +12,7 @@ const AIParser = ({ onAddTransactions }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('http://localhost:5001/api/analyze/parse-text', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to parse text');
+            const data = await parseText(text);
             setParsedData(data);
         } catch (err) {
             setError(err.message);

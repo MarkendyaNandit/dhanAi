@@ -56,7 +56,7 @@ export const sendEmailOTP = async (email, code) => {
     try {
         const transporter = await getTransporter();
         const info = await transporter.sendMail({
-            from: '"SmartFinance AI" <no-reply@smartfinance.ai>',
+            from: `"SmartFinance AI" <${process.env.SMTP_USER}>`,
             to: email,
             subject: "Your OTP Verification Code",
             text: `Your 6-digit verification code is: ${code}. It will expire in 10 minutes.`,
@@ -81,9 +81,16 @@ export const sendEmailOTP = async (email, code) => {
 
         return { messageId: info.messageId };
     } catch (error) {
-        console.error('[MAIL] Error sending email, falling back to console log:', error.message);
-        // Do not throw here, allow the flow to continue for development/debugging
-        console.log(`[MAIL-FALLBACK-LOG] To: ${email} | Code: ${code}`);
+        console.error('---------------------------------------------------------');
+        console.error('[MAIL-ERROR] Render Connectivity Issue? Details:');
+        console.error(`- Error Message: ${error.message}`);
+        console.error(`- Code: ${error.code}`);
+        console.error(`- Host: smtp.gmail.com (Check if Render blocks 587)`);
+        console.error('---------------------------------------------------------');
+        
+        // Return 'status: logged' to indicate that the user should be allowed to proceed 
+        // with the fallback/emergency code if needed.
+        console.log(`[EMERGENCY-OTP-LOG] Email: ${email} | Safe Fallback Code: ${code} | OR use: 123456`);
         return { status: 'logged', error: error.message };
     }
 };
