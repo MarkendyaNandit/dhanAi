@@ -98,13 +98,11 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
         data.transactions.filter(t => t.type === 'expense').forEach(t => {
             let month = 'Unknown';
             try {
-                // Try to parse the date and get YYYY-MM
                 const d = new Date(t.date);
                 if (!isNaN(d.getTime())) {
                     month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                 }
             } catch (e) {
-                // If date parsing fails, try extracting YYYY-MM directly
                 if (t.date && t.date.length >= 7) month = t.date.substring(0, 7);
             }
             if (month !== 'Unknown') {
@@ -122,10 +120,12 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
             forecast: null
         }));
 
-        // Predict next month using 3-month moving average
-        const lastN = sortedMonths.slice(-3);
-        const avgSpending = lastN.reduce((sum, m) => sum + monthlyMap[m], 0) / lastN.length;
-        const forecastAmount = convert ? convert(avgSpending * 1.05) : avgSpending * 1.05;
+        // Use the SAME predictedExpense from backend for forecast point
+        const forecastAmount = forecast?.predictedExpense
+            ? (convert ? convert(forecast.predictedExpense) : forecast.predictedExpense)
+            : null;
+
+        if (forecastAmount == null) return historicalData;
 
         // Generate next month label
         const lastMonth = sortedMonths[sortedMonths.length - 1];
@@ -134,7 +134,7 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
         const nextYr = mo === 12 ? yr + 1 : yr;
         const nextMonthKey = `${nextYr}-${String(nextMo).padStart(2, '0')}`;
 
-        // Add a bridge point (last real data also shown on forecast line) for continuity
+        // Bridge point for line continuity
         const lastHistorical = historicalData[historicalData.length - 1];
         lastHistorical.forecast = lastHistorical.spending;
 
@@ -146,7 +146,7 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
         });
 
         return historicalData;
-    }, [data, convert]);
+    }, [data, convert, forecast]);
 
     // Derive a rich insight string from any available field
     const insightText = useMemo(() => {
@@ -195,56 +195,6 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
                 convert={convert}
             />
 
-            {/* Monthly Spending Trend Chart */}
-            {trendData.length > 0 && (
-                <div className="glass-card">
-                    <h3 className="section-title">Monthly Spending Trend & Forecast</h3>
-                    <div style={{ width: '100%', height: '350px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                                <XAxis
-                                    dataKey="month"
-                                    stroke="var(--text-secondary)"
-                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                                    axisLine={{ stroke: 'var(--border-color)' }}
-                                />
-                                <YAxis
-                                    stroke="var(--text-secondary)"
-                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                                    axisLine={{ stroke: 'var(--border-color)' }}
-                                    tickFormatter={chartFormatCurrency}
-                                />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend wrapperStyle={{ paddingTop: '10px' }} formatter={(value) => value === 'spending' ? 'Actual Spending' : 'Forecast'} />
-                                {/* Solid line for actual spending */}
-                                <Line
-                                    type="monotone"
-                                    dataKey="spending"
-                                    stroke="var(--accent-primary)"
-                                    strokeWidth={3}
-                                    dot={{ fill: 'var(--accent-primary)', r: 5, strokeWidth: 2, stroke: 'var(--bg-primary)' }}
-                                    activeDot={{ r: 7, fill: 'var(--accent-primary)' }}
-                                    connectNulls={false}
-                                    name="spending"
-                                />
-                                {/* Dashed line for forecast */}
-                                <Line
-                                    type="monotone"
-                                    dataKey="forecast"
-                                    stroke="var(--warning)"
-                                    strokeWidth={3}
-                                    strokeDasharray="8 4"
-                                    dot={{ fill: 'var(--warning)', r: 6, strokeWidth: 2, stroke: 'var(--bg-primary)' }}
-                                    activeDot={{ r: 8, fill: 'var(--warning)' }}
-                                    connectNulls={false}
-                                    name="forecast"
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
-
             <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 <div className="glass-card stat-card">
                     <span className="stat-label">Predicted Spends</span>
@@ -284,6 +234,54 @@ const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) =>
                     </div>
                 )}
             </div>
+
+            {/* Monthly Spending Trend Chart — at bottom */}
+            {trendData.length > 0 && (
+                <div className="glass-card">
+                    <h3 className="section-title">Monthly Spending Trend & Forecast</h3>
+                    <div style={{ width: '100%', height: '350px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <XAxis
+                                    dataKey="month"
+                                    stroke="var(--text-secondary)"
+                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                    axisLine={{ stroke: 'var(--border-color)' }}
+                                />
+                                <YAxis
+                                    stroke="var(--text-secondary)"
+                                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                    axisLine={{ stroke: 'var(--border-color)' }}
+                                    tickFormatter={chartFormatCurrency}
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend wrapperStyle={{ paddingTop: '10px' }} formatter={(value) => value === 'spending' ? 'Actual Spending' : 'Forecast'} />
+                                <Line
+                                    type="monotone"
+                                    dataKey="spending"
+                                    stroke="var(--accent-primary)"
+                                    strokeWidth={3}
+                                    dot={{ fill: 'var(--accent-primary)', r: 5, strokeWidth: 2, stroke: 'var(--bg-primary)' }}
+                                    activeDot={{ r: 7, fill: 'var(--accent-primary)' }}
+                                    connectNulls={false}
+                                    name="spending"
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="forecast"
+                                    stroke="var(--warning)"
+                                    strokeWidth={3}
+                                    strokeDasharray="8 4"
+                                    dot={{ fill: 'var(--warning)', r: 6, strokeWidth: 2, stroke: 'var(--bg-primary)' }}
+                                    activeDot={{ r: 8, fill: 'var(--warning)' }}
+                                    connectNulls={false}
+                                    name="forecast"
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
