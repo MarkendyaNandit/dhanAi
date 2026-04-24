@@ -1,8 +1,21 @@
 import React from 'react';
 import { BrainCircuit, Sparkles } from 'lucide-react';
 
-const AIInsight = ({ title = "AI Insight", insight, color = "var(--accent-primary)" }) => {
+const AIInsight = ({ title = "AI Insight", insight, color = "var(--accent-primary)", format, convert }) => {
   if (!insight) return null;
+
+  // Dynamic currency replacement logic
+  const processedInsight = (() => {
+    if (!format || !convert) return insight;
+    
+    // Match patterns like ₹5,000, $100, or raw 5000 followed by "in expenses" etc.
+    // This is a heuristic to replace hardcoded INR values with converted ones.
+    return insight.replace(/(?:₹|\$|INR|Rs\.?)\s*([\d,]+\.?\d*)/g, (match, p1) => {
+      const val = parseFloat(p1.replace(/,/g, ''));
+      if (isNaN(val)) return match;
+      return format(convert(val));
+    });
+  })();
 
   return (
     <div className="glass-card ai-insight-box" style={{ 
@@ -62,7 +75,7 @@ const AIInsight = ({ title = "AI Insight", insight, color = "var(--accent-primar
         position: 'relative',
         zIndex: 1
       }}>
-        {insight}
+        {processedInsight}
       </p>
       
       <div style={{ 

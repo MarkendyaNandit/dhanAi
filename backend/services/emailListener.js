@@ -5,7 +5,7 @@ import Statement from '../models/Statement.js';
 import { OAuth2Client } from 'google-auth-library';
 import { checkSpendingAlert } from './notificationService.js';
 
-const activeConnections = new Map(); // userId -> connection object
+export const activeConnections = new Map(); // userId -> connection object
 
 const buildXoauth2Token = (user, accessToken) => {
     return Buffer.from([
@@ -83,9 +83,15 @@ export const stopUserEmailListener = (userId) => {
     }
 };
 
-const checkUserUnreadEmails = async (userId, userEmail) => {
+export const triggerManualSync = async (userId, userEmail) => {
+    return await checkUserUnreadEmails(userId.toString(), userEmail);
+};
+
+export const checkUserUnreadEmails = async (userId, userEmail) => {
     const connection = activeConnections.get(userId);
-    if (!connection) return;
+    if (!connection) return [];
+
+    let allFoundTransactions = [];
 
     try {
         const searchCriteria = ['UNSEEN'];
@@ -106,19 +112,11 @@ const checkUserUnreadEmails = async (userId, userEmail) => {
             const subject = parsedMeta.subject || '';
             const text = parsedMeta.text || parsedMeta.textAsHtml || '';
 
-            // Optional: Filter explicitly by email domains known for banking to save parsing
-            // For now we run our local fast parser
             console.log(`Processing new email: ${subject}`);
 
             const result = await parseRawMessages(text);
 
             if (result.transactions && result.transactions.length > 0) {
-                // If it successfully extracted transactions, save them to the database
-                // Note: We need a User context. Since backend is generic right now, 
-                // we'll append this to a 'Global' statement or the most recent statement ID for simplicity?
-                // Best practice is having a User object to sync against.
-
-                // Let's find the most recent statement for THIS user and append
                 const mostRecentStatement = await Statement.findOne({ userId: userId }).sort({ uploadDate: -1 });
                 if (mostRecentStatement) {
                     const newTrxs = result.transactions.map(t => ({
@@ -141,12 +139,15 @@ const checkUserUnreadEmails = async (userId, userEmail) => {
 
                     // Check for spending alerts after sync
                     checkSpendingAlert(userId, newTrxs);
-
+                    
+                    allFoundTransactions.push(...newTrxs);
                     console.log(`[SYNC] Appended ${newTrxs.length} transactions to statement for user ${userEmail}.`);
                 }
             }
         }
+        return allFoundTransactions;
     } catch (e) {
         console.error(`[SYNC] Error for ${userEmail}:`, e.message);
+        return [];
     }
 };

@@ -1,15 +1,11 @@
 import AIInsight from './AIInsight';
 import Charts from './Charts';
-import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Activity, Plus } from 'lucide-react';
 
-const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
+const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format }) => {
   if (!data) return null;
 
   const { overview, insights, totalIncome, totalExpense, transactions } = data;
-
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val);
-  };
 
   const remaining = totalIncome - totalExpense;
 
@@ -30,10 +26,10 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
             }, {})
           ).sort((a, b) => b[1] - a[1])[0]
         : null;
-      const fmt = (n) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0);
+      
       return remaining >= 0
-        ? `Savings rate: ${savingsRate}% — You have ₹${fmt(remaining)} surplus this period.${topCat ? ` Top spending category: ${topCat[0]} (₹${fmt(topCat[1])}).` : ''} Keep it up!`
-        : `⚠️ Overspending: Expenses exceed income by ₹${fmt(Math.abs(remaining))}.${topCat ? ` Largest cost: ${topCat[0]} (₹${fmt(topCat[1])}).` : ''} Review non-essentials.`;
+        ? `Savings rate: ${savingsRate}% — You have ${format(convert(remaining))} surplus this period.${topCat ? ` Top spending category: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Keep it up!`
+        : `⚠️ Overspending: Expenses exceed income by ${format(convert(Math.abs(remaining)))}.${topCat ? ` Largest cost: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Review non-essentials.`;
     }
     return null;
   })();
@@ -64,7 +60,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
              <span className="stat-label">Total Income</span>
              <ArrowUpRight color="var(--success)" size={24} />
           </div>
-          <span className="stat-value income">{formatCurrency(totalIncome)}</span>
+          <span className="stat-value income">{format(convert(totalIncome))}</span>
         </div>
         
         <div className="glass-card stat-card">
@@ -72,7 +68,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
              <span className="stat-label">Total Spends</span>
              <ArrowDownRight color="var(--danger)" size={24} />
           </div>
-          <span className="stat-value expense">{formatCurrency(totalExpense)}</span>
+          <span className="stat-value expense">{format(convert(totalExpense))}</span>
         </div>
 
         <div className="glass-card stat-card">
@@ -81,7 +77,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
              <Activity color="var(--accent-primary)" size={24} />
           </div>
           <span className={`stat-value ${remaining >= 0 ? 'income' : 'expense'}`}>
-            {formatCurrency(remaining)}
+            {format(convert(remaining))}
           </span>
         </div>
       </div>
@@ -91,12 +87,14 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
         <div className="flex-col gap-6">
           <div className="glass-card">
             <h3 className="section-title">Income vs Spendings</h3>
-            <Charts transactions={transactions || []} currency={currency} />
+            <Charts transactions={transactions || []} currency={currency} convert={convert} format={format} />
           </div>
 
           <AIInsight 
             title="Financial Health Overview" 
             insight={insightText} 
+            format={format}
+            convert={convert}
           />
         </div>
 
@@ -117,7 +115,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
                       </div>
                     </div>
                     <div className={`transaction-amount ${tx.type === 'income' ? 'income' : 'expense'}`}>
-                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                       {tx.type === 'income' ? '+' : '-'}{format(convert(tx.amount))}
                     </div>
                   </div>
                 ))
@@ -129,6 +127,30 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false }) => {
            </div>
         </div>
       </div>
+
+
+      {/* Floating Action Button for Manual Entry */}
+      <button 
+        className="btn btn-primary" 
+        onClick={onAddTransaction}
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
+          zIndex: 100,
+          padding: 0
+        }}
+        title="Add Transaction Manually"
+      >
+        <Plus size={30} />
+      </button>
 
     </div>
   );

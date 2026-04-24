@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { uploadStatement, fetchHistory, syncTransactions, updateOverview } from './api';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
+import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction } from './api';
+import { convertCurrency, formatCurrency } from './utils/currency';
+
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
+import ManualTransactionModal from './components/ManualTransactionModal';
+
 import Forecast from './pages/Forecast';
 import GoalPlanner from './pages/GoalPlanner';
 import Chatbot from './pages/Chatbot';
@@ -11,15 +17,26 @@ import Transactions from './pages/Transactions';
 import Settings from './pages/Settings';
 import SecuritySettings from './pages/SecuritySettings';
 import AccountDetails from './pages/AccountDetails';
-
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
-import { Navigate } from 'react-router-dom';
 
 function MainApp() {
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    NProgress.start();
+    const timer = setTimeout(() => {
+      NProgress.done();
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      NProgress.done();
+    };
+  }, [location.pathname]);
+
   const [error, setError] = useState(null);
   const [statementData, setStatementData] = useState(null);
   const [history, setHistory] = useState([]);
@@ -27,6 +44,7 @@ function MainApp() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -35,21 +53,45 @@ function MainApp() {
   useEffect(() => {
     if (currentUser) {
       loadHistory();
+      // Initial sync
       autoSync();
     }
   }, [currentUser]);
 
+  const [syncRetryCount, setSyncRetryCount] = useState(0);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Periodic sync every 2 minutes with backoff on failure
+    const intervalTime = Math.min(120000 * Math.pow(2, syncRetryCount), 3600000); // max 1 hour
+    const timer = setInterval(() => {
+        autoSync();
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [currentUser, syncRetryCount]);
+
   const autoSync = async () => {
+    if (isSyncing) return;
     setIsSyncing(true);
     try {
       const syncData = await syncTransactions();
       if (syncData.newTransactions && syncData.newTransactions.length > 0) {
         console.log("[SYNC] Found new transactions from Email Sync:", syncData.newTransactions);
         // Store found transactions to merge when a statement is loaded
-        setNewAdhocTransactions(syncData.newTransactions);
+        setNewAdhocTransactions(prev => {
+            // Avoid duplicates
+            const filtered = syncData.newTransactions.filter(nt => 
+                !prev.some(p => p.description === nt.description && p.amount === nt.amount)
+            );
+            return [...prev, ...filtered];
+        });
       }
+      setSyncRetryCount(0); // Reset on success
     } catch (err) {
-      console.warn("Auto-sync failed:", err);
+      console.warn("Auto-sync failed, retrying later:", err);
+      setSyncRetryCount(prev => prev + 1);
     } finally {
       setIsSyncing(false);
     }
@@ -139,6 +181,26 @@ function MainApp() {
   const handleViewHistory = (data) => {
     setStatementData(data);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleManualSave = async (txData) => {
+    try {
+        setLoading(true);
+        const result = await addManualTransaction(txData);
+        // Refresh the current statement data
+        const updatedHistory = await fetchHistory(currentUser._id);
+        setHistory(updatedHistory);
+        // Find the updated version of current statement
+        const updatedStatement = updatedHistory.find(s => s._id === result.statementId);
+        if (updatedStatement) {
+            setStatementData(updatedStatement);
+        }
+        alert('Transaction added successfully!');
+    } catch (err) {
+        alert('Failed to add transaction: ' + err.message);
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -315,11 +377,11 @@ function MainApp() {
 
       <main style={{ minHeight: '60vh', padding: '2rem' }}>
         <Routes>
-          <Route path="/" element={<Dashboard data={statementData} currency={currency} isSyncing={isSyncing} />} />
-          <Route path="/forecast" element={<Forecast data={statementData} currency={currency} />} />
-          <Route path="/goals" element={<GoalPlanner data={statementData} currency={currency} />} />
-          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} />} />
-          <Route path="/chat" element={<Chatbot data={statementData} />} />
+          <Route path="/" element={<Dashboard data={statementData} currency={currency} isSyncing={isSyncing} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} onAddTransaction={() => setIsModalOpen(true)} />} />
+          <Route path="/forecast" element={<Forecast data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
+          <Route path="/goals" element={<GoalPlanner data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
+          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} onAddTransaction={() => setIsModalOpen(true)} />} />
+          <Route path="/chat" element={<Chatbot data={statementData} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
           <Route path="/settings" element={<Settings data={statementData} currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
           <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
           <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
@@ -327,6 +389,12 @@ function MainApp() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
+
+      <ManualTransactionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleManualSave} 
+      />
     </div>
   );
 }

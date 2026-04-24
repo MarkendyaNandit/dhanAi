@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import AIInsight from '../components/AIInsight';
+import { Plus } from 'lucide-react';
 
-const Transactions = ({ data, currency = 'USD' }) => {
+const Transactions = ({ data, currency = 'USD', convert, format, onAddTransaction }) => {
     const [filter, setFilter] = useState('all');
 
     if (!data || !data.transactions) {
@@ -18,10 +19,6 @@ const Transactions = ({ data, currency = 'USD' }) => {
         return tx.type === filter;
     });
 
-    const formatCurrency = (val) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val);
-    };
-
     // Build rich insight text with JS fallback
     const insightText = useMemo(() => {
         const backendInsight = data.insights?.transactions;
@@ -37,16 +34,16 @@ const Transactions = ({ data, currency = 'USD' }) => {
         });
         const sorted = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
         const topCat = sorted[0];
-        const fmt = (n) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0);
+        
         const totalExp = expenses.reduce((s, t) => s + t.amount, 0);
         const totalInc = incomes.reduce((s, t) => s + t.amount, 0);
-        const top3 = sorted.slice(0, 3).map(([k, v]) => `${k} (₹${fmt(v)})`).join(', ');
+        const top3 = sorted.slice(0, 3).map(([k, v]) => `${k} (${format(convert(v))})`).join(', ');
 
         return `You have ${data.transactions.length} total transactions — ${incomes.length} income & ${expenses.length} expenses. ` +
-            (topCat ? `Top spending category: ${topCat[0]} at ₹${fmt(topCat[1])} (${totalExp > 0 ? ((topCat[1] / totalExp) * 100).toFixed(0) : 0}% of total spend). ` : '') +
+            (topCat ? `Top spending category: ${topCat[0]} at ${format(convert(topCat[1]))} (${totalExp > 0 ? ((topCat[1] / totalExp) * 100).toFixed(0) : 0}% of total spend). ` : '') +
             (top3 ? `Breakdown: ${top3}. ` : '') +
             (totalExp > totalInc * 0.8 ? '⚠️ High expense-to-income ratio — review recurring costs.' : '✅ Spending pattern looks healthy.');
-    }, [data]);
+    }, [data, format, convert]);
 
     return (
         <div className="animation-fade-in">
@@ -79,6 +76,8 @@ const Transactions = ({ data, currency = 'USD' }) => {
                 title="Spending Habit Analysis" 
                 insight={insightText} 
                 color="var(--warning)"
+                format={format}
+                convert={convert}
             />
 
             <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -102,7 +101,7 @@ const Transactions = ({ data, currency = 'USD' }) => {
                                     </span>
                                 </td>
                                 <td style={{ textAlign: 'right', fontWeight: 600 }} className={tx.type}>
-                                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                    {tx.type === 'income' ? '+' : '-'}{format(convert(tx.amount))}
                                 </td>
                             </tr>
                         ))}
@@ -116,6 +115,29 @@ const Transactions = ({ data, currency = 'USD' }) => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Floating Action Button for Manual Entry */}
+            <button 
+                className="btn btn-primary" 
+                onClick={onAddTransaction}
+                style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
+                    zIndex: 100,
+                    padding: 0
+                }}
+                title="Add Transaction Manually"
+            >
+                <Plus size={30} />
+            </button>
         </div>
     );
 };

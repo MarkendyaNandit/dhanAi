@@ -127,6 +127,19 @@ export const updateOverview = async (transactions, totalIncome, totalExpense) =>
     return safeParseJson(response);
 };
 
+export const addManualTransaction = async (txData) => {
+    const response = await fetch(`${API_URL}/analyze/transaction`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(txData)
+    });
+    if (!response.ok) {
+        const err = await safeParseJson(response).catch(() => ({ error: 'Failed to add transaction' }));
+        throw new Error(err.error || 'Failed to add transaction');
+    }
+    return safeParseJson(response);
+};
+
 export const register = async (name, email, password, phone) => {
     const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',

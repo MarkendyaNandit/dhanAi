@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { fetchForecast } from '../api';
 import AIInsight from '../components/AIInsight';
 
-const Forecast = ({ data, currency = 'USD' }) => {
+const Forecast = ({ data, currency = 'USD', convert, format }) => {
   const [forecast, setForecast] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,7 +26,8 @@ const Forecast = ({ data, currency = 'USD' }) => {
       );
   }
 
-  const formatCurrency = (val) => {
+  const formatValue = (val) => {
+    if (format && convert) return format(convert(val));
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(val || 0);
   };
 
@@ -54,7 +55,9 @@ const Forecast = ({ data, currency = 'USD' }) => {
             <ForecastContent
                 forecast={forecast}
                 data={data}
-                formatCurrency={formatCurrency}
+                formatCurrency={formatValue}
+                format={format}
+                convert={convert}
             />
         )}
     </div>
@@ -62,7 +65,7 @@ const Forecast = ({ data, currency = 'USD' }) => {
 };
 
 // Separate component to cleanly use hooks
-const ForecastContent = ({ forecast, data, formatCurrency }) => {
+const ForecastContent = ({ forecast, data, formatCurrency, format, convert }) => {
     // Build category breakdown from backend data or fall back to raw transactions
     const categoryBreakdown = useMemo(() => {
         const cats = forecast?.categories;
@@ -105,6 +108,8 @@ const ForecastContent = ({ forecast, data, formatCurrency }) => {
                 title="Forecast Analysis"
                 insight={insightText}
                 color="var(--accent-secondary)"
+                format={format}
+                convert={convert}
             />
 
             <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
