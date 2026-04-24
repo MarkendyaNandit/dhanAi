@@ -326,7 +326,16 @@ const generateLocalFinanceResponse = (message, context) => {
         return `Hello! 👋 I'm your DhanAi financial advisor. I can help you with:\n\n• **Budgeting & Savings** — Build a solid financial plan\n• **Investment Advice** — Stocks, mutual funds, SIPs, FDs\n• **Tax Planning** — Maximize your deductions\n• **Debt Management** — Loans, EMIs, credit cards\n• **Financial Goals** — Plan for big purchases, retirement\n\nUpload a bank statement on the Dashboard to get personalized insights, or ask me anything about finance!`;
     }
 
-    // ── Savings & Budgeting ──
+    // ── Personal Data Queries (MUST be before generic topic matchers) ──
+    if (/my\s*(budget|spend|expense|saving|money|income|financ|data|balance|salary)|how\s*much\s*(do\s*i|have\s*i|am\s*i|did\s*i)|where.*money|show\s*me|what('?s| is)\s*my|tell\s*me\s*(about\s*)?my/i.test(msg)) {
+        if (hasData) {
+            const catBreakdown = metrics.topCategories.map(([k, v], i) => `${i + 1}. ${k}: ₹${v.toLocaleString()} (${((v / metrics.totalExpense) * 100).toFixed(1)}%)`).join('\n');
+            return `Here's your financial overview:\n\n• Income: ₹${metrics.totalIncome.toLocaleString()}\n• Expenses: ₹${metrics.totalExpense.toLocaleString()}\n• Net Savings: ₹${metrics.remaining.toLocaleString()}\n• Savings Rate: ${metrics.savingsRate}%\n\nSpending Breakdown:\n${catBreakdown}\n\n${parseFloat(metrics.savingsRate) >= 20 ? '✅ Your savings rate is healthy! Consider investing the surplus in SIPs or index funds.' : '⚠️ Your savings rate is below the recommended 20%. Focus on reducing your top spending category and automating savings.'}`;
+        }
+        return `I don't have your financial data loaded yet. Please upload a bank statement on the Dashboard first, then come back here and I'll show you a full breakdown of your budget, spending, and savings!`;
+    }
+
+    // ── Savings & Budgeting (generic advice) ──
     if (/sav(e|ing)|budget|cut\s*cost|reduce\s*spend|frugal|50.?30.?20/i.test(msg)) {
         let response = `Here are proven strategies to boost your savings:\n\n**The 50/30/20 Rule:**\n• 50% of income → Needs (rent, groceries, utilities)\n• 30% → Wants (dining, entertainment, shopping)\n• 20% → Savings & investments\n\n**Quick Wins:**\n• Automate transfers to a savings account on payday\n• Cancel unused subscriptions (audit monthly)\n• Cook at home — eating out costs 3-5x more\n• Use cashback/reward credit cards for regular spends\n• Set up a 24-hour rule for impulse purchases over ₹2,000`;
         if (hasData && metrics.topCategories.length > 0) {
