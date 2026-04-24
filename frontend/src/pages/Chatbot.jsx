@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { sendChatMessage } from '../api';
 import { Send } from 'lucide-react';
 
-const Chatbot = ({ data }) => {
+const Chatbot = ({ currentUser, statementData }) => {
   const [messages, setMessages] = useState([
       { role: 'assistant', text: 'Hi! I am your AI Finance Assistant. Ask me anything about your uploaded statement or general finance advice!' }
   ]);
@@ -25,7 +25,7 @@ const Chatbot = ({ data }) => {
 
       try {
           // Pass the statement ID so backend has context
-          const response = await sendChatMessage(userMsg, data?._id, data);
+          const response = await sendChatMessage(userMsg, statementData?._id, statementData);
           setMessages(prev => [...prev, { role: 'assistant', text: response.reply }]);
       } catch (error) {
           setMessages(prev => [...prev, { role: 'assistant', text: 'Sorry, I encountered an error. Please try again later.' }]);
