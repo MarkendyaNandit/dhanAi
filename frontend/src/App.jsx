@@ -3,26 +3,23 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction, fetchCurrentUser } from './api';
 import { convertCurrency, formatCurrency } from './utils/currency';
 
-// Components
+// Components & Pages
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import History from './components/History';
-import ManualTransactionModal from './components/ManualTransactionModal';
-
-// Pages
 import Transactions from './pages/Transactions';
 import Forecast from './pages/Forecast';
 import Settings from './pages/Settings';
 import AIParser from './pages/AIParser';
 import Chatbot from './pages/Chatbot';
+import GoalPlanner from './pages/GoalPlanner';
+import AccountDetails from './pages/AccountDetails';
+import SecuritySettings from './pages/SecuritySettings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
-import GoalPlanner from './pages/GoalPlanner';
-import AccountDetails from './pages/AccountDetails';
-import SecuritySettings from './pages/SecuritySettings';
+import ManualTransactionModal from './components/ManualTransactionModal';
 
 import './App.css';
 
@@ -71,7 +68,7 @@ function MainApp() {
     if (isSyncing || !currentUser) return;
     setIsSyncing(true);
     try {
-      const res = await syncTransactions();
+      const res = await syncTransactions(currentUser._id);
       if (res.newTransactions && res.newTransactions.length > 0) {
         setNewAdhocTransactions(prev => [...prev, ...res.newTransactions]);
       }
@@ -82,12 +79,10 @@ function MainApp() {
     }
   };
 
-  // Fetch history when user is available
   useEffect(() => {
     if (currentUser) {
       loadHistory();
-      // Initial sync if user has Gmail configured
-      if (currentUser.googleRefreshToken || currentUser.imapPassword) {
+      if (currentUser.imapPassword || currentUser.googleRefreshToken) {
           autoSync();
       }
     }
@@ -167,6 +162,8 @@ function MainApp() {
     }
   };
 
+  const openModal = () => setIsModalOpen(true);
+
   useEffect(() => {
     localStorage.setItem('theme', theme);
     document.body.className = `${theme}-theme`;
@@ -176,7 +173,6 @@ function MainApp() {
     localStorage.setItem('currency', currency);
   }, [currency]);
 
-  // Handle currency auto-detection
   useEffect(() => {
     const detectCurrency = async () => {
       try {
@@ -201,7 +197,6 @@ function MainApp() {
     );
   }
 
-  // Not logged in -> Show Home, Login or Register
   if (!currentUser) {
     return (
       <div className={`app-container ${theme}-theme`}>
@@ -221,7 +216,7 @@ function MainApp() {
         <div className="flex items-center gap-4">
           <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer' }} onClick={() => setStatementData(null)}>DhanAi</h2>
         </div>
-        <Navigation onLogout={handleLogout} />
+        <Navigation />
       </header>
 
       <main className="container" style={{ flex: 1, padding: '2rem 0' }}>
@@ -234,7 +229,7 @@ function MainApp() {
                 isSyncing={isSyncing}
                 convert={convertFn}
                 format={formatFn}
-                onAddTransaction={() => setIsModalOpen(true)}
+                onAddTransaction={openModal}
               />
             ) : (
               <div className="animation-fade-in">
@@ -261,17 +256,42 @@ function MainApp() {
                 </div>
 
                 {history.length > 0 && !loading && (
-                  <History history={history} onSelect={handleViewHistory} />
+                  <div className="glass-card" style={{ marginTop: '2rem' }}>
+                    <h3 className="section-title">Analysis History</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                      {history.map(item => (
+                        <div 
+                          key={item._id} 
+                          className="glass-card" 
+                          style={{ cursor: 'pointer', padding: '1.5rem', border: '1px solid var(--border-color)' }}
+                          onClick={() => handleViewHistory(item)}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                              {new Date(item.uploadDate).toLocaleDateString()}
+                            </span>
+                            <span className="badge income" style={{ fontSize: '0.7rem' }}>CSV</span>
+                          </div>
+                          <h4 style={{ margin: '0 0 0.5rem' }}>Statement Analysis</h4>
+                          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem' }}>
+                            <span style={{ color: 'var(--success)' }}>+{formatFn(item.totalIncome)}</span>
+                            <span style={{ color: 'var(--danger)' }}>-{formatFn(item.totalExpense)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )
           } />
 
-          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={convertFn} format={formatFn} onAddTransaction={() => setIsModalOpen(true)} />} />
+          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={convertFn} format={formatFn} onAddTransaction={openModal} />} />
           <Route path="/forecast" element={<Forecast data={statementData} currency={currency} convert={convertFn} format={formatFn} />} />
-          <Route path="/goals" element={<GoalPlanner data={statementData} currentUser={currentUser} currency={currency} convert={convertFn} format={formatFn} />} />
+          <Route path="/goals" element={<GoalPlanner data={statementData} currency={currency} />} />
           <Route path="/chat" element={<Chatbot currentUser={currentUser} statementData={statementData} />} />
           
+          {/* Settings Sub-routes */}
           <Route path="/settings" element={<Settings data={statementData} currentUser={currentUser} setCurrentUser={setCurrentUser} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
           <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
