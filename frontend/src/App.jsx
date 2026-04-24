@@ -3,21 +3,26 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction, fetchCurrentUser } from './api';
 import { convertCurrency, formatCurrency } from './utils/currency';
 
-// Components & Pages
+// Components
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
+import History from './components/History';
+import ManualTransactionModal from './components/ManualTransactionModal';
+
+// Pages
 import Transactions from './pages/Transactions';
 import Forecast from './pages/Forecast';
 import Settings from './pages/Settings';
 import AIParser from './pages/AIParser';
 import Chatbot from './pages/Chatbot';
-import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
-import ManualTransactionModal from './components/ManualTransactionModal';
+import GoalPlanner from './pages/GoalPlanner';
+import AccountDetails from './pages/AccountDetails';
+import SecuritySettings from './pages/SecuritySettings';
 
 import './App.css';
 
@@ -66,7 +71,7 @@ function MainApp() {
     if (isSyncing || !currentUser) return;
     setIsSyncing(true);
     try {
-      const res = await syncTransactions(currentUser._id);
+      const res = await syncTransactions();
       if (res.newTransactions && res.newTransactions.length > 0) {
         setNewAdhocTransactions(prev => [...prev, ...res.newTransactions]);
       }
@@ -81,8 +86,8 @@ function MainApp() {
   useEffect(() => {
     if (currentUser) {
       loadHistory();
-      // Initial sync if user has IMAP/Gmail configured
-      if (currentUser.imapPassword || currentUser.googleRefreshToken) {
+      // Initial sync if user has Gmail configured
+      if (currentUser.googleRefreshToken || currentUser.imapPassword) {
           autoSync();
       }
     }
@@ -128,7 +133,6 @@ function MainApp() {
     setError(null);
     try {
       const response = await uploadStatement(file, currentUser._id);
-      console.log("Upload response:", response);
       if (response && response.data) {
           setStatementData(response.data);
           loadHistory();
@@ -186,7 +190,6 @@ function MainApp() {
     if (!localStorage.getItem('currency')) detectCurrency();
   }, []);
 
-  // Use useMemo for props passed to routes to prevent unnecessary re-renders
   const convertFn = useMemo(() => (amt) => convertCurrency(amt, 'INR', currency), [currency]);
   const formatFn = useMemo(() => (amt) => formatCurrency(amt, currency), [currency]);
 
@@ -266,8 +269,13 @@ function MainApp() {
 
           <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={convertFn} format={formatFn} onAddTransaction={() => setIsModalOpen(true)} />} />
           <Route path="/forecast" element={<Forecast data={statementData} currency={currency} convert={convertFn} format={formatFn} />} />
+          <Route path="/goals" element={<GoalPlanner data={statementData} currentUser={currentUser} currency={currency} convert={convertFn} format={formatFn} />} />
           <Route path="/chat" element={<Chatbot currentUser={currentUser} statementData={statementData} />} />
-          <Route path="/settings/*" element={<Settings user={currentUser} onUpdateUser={setCurrentUser} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
+          
+          <Route path="/settings" element={<Settings data={statementData} currentUser={currentUser} setCurrentUser={setCurrentUser} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
+          <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+          <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
+          
           <Route path="/ai-parser" element={<AIParser onAddTransactions={(txs) => setNewAdhocTransactions(prev => [...prev, ...txs])} />} />
           <Route path="/auth/google/callback" element={<GoogleCallback currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           
