@@ -20,6 +20,7 @@ import Register from './pages/Register';
 import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
 import ManualTransactionModal from './components/ManualTransactionModal';
+import Privacy from './pages/Privacy';
 
 import './App.css';
 
@@ -204,6 +205,7 @@ function MainApp() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login onLogin={(user) => setCurrentUser(user)} />} />
           <Route path="/register" element={<Register onLogin={(user) => setCurrentUser(user)} />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
