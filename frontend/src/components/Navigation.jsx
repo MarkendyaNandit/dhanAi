@@ -1,28 +1,27 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target, Sparkles, LogOut, UploadCloud } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target, Sparkles } from 'lucide-react';
 
-const Navigation = ({ onLogout, onNewUpload }) => {
+const Navigation = () => {
   const tabs = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Forecast', path: '/forecast', icon: <TrendingUp size={20} /> },
-    { name: 'Transactions', path: '/transactions', icon: <ListTree size={20} /> },
-    { name: 'Goal Planner', path: '/goals', icon: <Target size={20} /> },
-    { name: 'AI Extract', path: '/ai-parser', icon: <Sparkles size={20} /> },
-    { name: 'AI Chat', path: '/chat', icon: <MessageSquare size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> }
+    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={16} /> },
+    { name: 'Forecast', path: '/forecast', icon: <TrendingUp size={16} /> },
+    { name: 'Transactions', path: '/transactions', icon: <ListTree size={16} /> },
+    { name: 'Goal Planner', path: '/goals', icon: <Target size={16} /> },
+    { name: 'AI Extract', path: '/ai-parser', icon: <Sparkles size={16} /> },
+    { name: 'AI Chat', path: '/chat', icon: <MessageSquare size={16} /> },
+    { name: 'Settings', path: '/settings', icon: <Settings size={16} /> }
   ];
 
   return (
-    <nav className="glass-card nav-container" style={{ 
+    <nav className="nav-container" style={{ 
         display: 'flex', 
         alignItems: 'center',
-        gap: '1rem', 
-        padding: '0.5rem 1.5rem',
+        gap: '0.25rem', 
+        padding: '0.35rem 0.5rem',
         borderRadius: '100px',
-        background: 'rgba(255, 255, 255, 0.03)',
+        background: 'rgba(255, 255, 255, 0.04)',
         border: '1px solid var(--border-color)',
-        backdropFilter: 'blur(10px)'
     }}>
       {tabs.map(tab => (
         <NavLink
@@ -32,69 +31,21 @@ const Navigation = ({ onLogout, onNewUpload }) => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
+            gap: '0.35rem',
+            padding: '0.4rem 0.75rem',
             borderRadius: '100px',
             color: 'var(--text-secondary)',
             textDecoration: 'none',
             transition: 'all 0.3s ease',
-            fontWeight: 500
+            fontWeight: 500,
+            fontSize: '0.82rem',
+            whiteSpace: 'nowrap'
           }}
         >
           {tab.icon}
           <span className="nav-text">{tab.name}</span>
         </NavLink>
       ))}
-
-      {/* New Upload button */}
-      {onNewUpload && (
-        <button
-          onClick={onNewUpload}
-          title="Upload New Statement"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '100px',
-            color: 'var(--accent-primary)',
-            background: 'none',
-            border: '1px solid var(--accent-primary)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            fontWeight: 500,
-            fontSize: 'inherit'
-          }}
-        >
-          <UploadCloud size={20} />
-          <span className="nav-text">New Upload</span>
-        </button>
-      )}
-
-      {/* Logout button */}
-      {onLogout && (
-        <button
-          onClick={onLogout}
-          title="Logout"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '100px',
-            color: 'var(--danger)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            fontWeight: 500,
-            fontSize: 'inherit'
-          }}
-        >
-          <LogOut size={20} />
-          <span className="nav-text">Logout</span>
-        </button>
-      )}
     </nav>
   );
 };

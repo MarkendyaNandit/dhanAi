@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction, fetchCurrentUser } from './api';
 import { convertCurrency, formatCurrency } from './utils/currency';
+import { UploadCloud, LogOut } from 'lucide-react';
 
 // Components & Pages
 import UploadSection from './components/UploadSection';
@@ -217,25 +218,74 @@ function MainApp() {
   return (
     <div className={`app-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header className="navbar" style={{ 
-        background: 'rgba(10, 10, 15, 0.8)', 
-        backdropFilter: 'blur(20px)',
+        background: 'rgba(10, 10, 15, 0.85)', 
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         borderBottom: '1px solid var(--border-color)', 
         position: 'sticky', 
         top: 0, 
         zIndex: 1000,
-        padding: '0.75rem 0'
+        padding: '0.6rem 2rem'
       }}>
-        <div className="container flex items-center justify-between" style={{ display: 'flex', width: '100%' }}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-            <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer', fontSize: '1.5rem' }} onClick={() => setStatementData(null)}>DhanAi</h2>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', maxWidth: '1400px', margin: '0 auto' }}>
+          {/* Left: Logo */}
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', marginRight: '1.5rem' }}>
+            <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer', fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.5px' }} onClick={() => setStatementData(null)}>DhanAi</h2>
           </div>
           
-          <div style={{ flex: '0 1 auto' }}>
-            <Navigation onLogout={handleLogout} onNewUpload={() => setStatementData(null)} />
+          {/* Center: Navigation Pill */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <Navigation />
           </div>
 
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            {/* This space balances the logo to keep the nav perfectly centered */}
+          {/* Right: Action Buttons */}
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '1.5rem' }}>
+            <button
+              onClick={() => setStatementData(null)}
+              title="Upload New Statement"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 1rem',
+                borderRadius: '100px',
+                color: 'var(--accent-primary)',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                fontFamily: 'var(--font-family)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <UploadCloud size={16} />
+              New Upload
+            </button>
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.85rem',
+                borderRadius: '100px',
+                color: 'var(--danger)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontWeight: 500,
+                fontSize: '0.82rem',
+                fontFamily: 'var(--font-family)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
           </div>
         </div>
       </header>
