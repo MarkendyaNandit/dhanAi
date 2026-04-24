@@ -16,14 +16,13 @@ const Navigation = ({ onLogout, onNewUpload }) => {
   return (
     <nav className="glass-card nav-container" style={{ 
         display: 'flex', 
-        justifyContent: 'center', 
+        alignItems: 'center',
         gap: '1rem', 
-        padding: '0.75rem 2rem',
-        marginBottom: '2rem',
+        padding: '0.5rem 1.5rem',
         borderRadius: '100px',
-        position: 'sticky',
-        top: '1rem',
-        zIndex: 50
+        background: 'rgba(255, 255, 255, 0.03)',
+        border: '1px solid var(--border-color)',
+        backdropFilter: 'blur(10px)'
     }}>
       {tabs.map(tab => (
         <NavLink

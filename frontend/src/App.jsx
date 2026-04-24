@@ -216,11 +216,28 @@ function MainApp() {
 
   return (
     <div className={`app-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="navbar flex items-center justify-between p-4" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 1000 }}>
-        <div className="flex items-center gap-4">
-          <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer' }} onClick={() => setStatementData(null)}>DhanAi</h2>
+      <header className="navbar" style={{ 
+        background: 'rgba(10, 10, 15, 0.8)', 
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--border-color)', 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 1000,
+        padding: '0.75rem 0'
+      }}>
+        <div className="container flex items-center justify-between" style={{ display: 'flex', width: '100%' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer', fontSize: '1.5rem' }} onClick={() => setStatementData(null)}>DhanAi</h2>
+          </div>
+          
+          <div style={{ flex: '0 1 auto' }}>
+            <Navigation onLogout={handleLogout} onNewUpload={() => setStatementData(null)} />
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            {/* This space balances the logo to keep the nav perfectly centered */}
+          </div>
         </div>
-        <Navigation onLogout={handleLogout} onNewUpload={() => setStatementData(null)} />
       </header>
 
       <main className="container" style={{ flex: 1, padding: '2rem 0' }}>
