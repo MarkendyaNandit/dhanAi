@@ -21,6 +21,7 @@ import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
 import ManualTransactionModal from './components/ManualTransactionModal';
 import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 import './App.css';
 
@@ -206,6 +207,7 @@ function MainApp() {
           <Route path="/login" element={<Login onLogin={(user) => setCurrentUser(user)} />} />
           <Route path="/register" element={<Register onLogin={(user) => setCurrentUser(user)} />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
