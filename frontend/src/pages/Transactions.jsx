@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import AIInsight from '../components/AIInsight';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
 
 const Transactions = ({ data, currency = 'USD', convert, format, onAddTransaction }) => {
     const [filter, setFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState('desc');
 
     // Build rich insight text with JS fallback
     const insightText = useMemo(() => {
@@ -41,10 +42,12 @@ const Transactions = ({ data, currency = 'USD', convert, format, onAddTransactio
         );
     }
 
-    const filtered = data.transactions.filter(tx => {
-        if (filter === 'all') return true;
-        return tx.type === filter;
-    });
+    const filtered = data.transactions
+        .filter(tx => {
+            if (filter === 'all') return true;
+            return tx.type === filter;
+        })
+        .sort((a, b) => sortOrder === 'desc' ? b.amount - a.amount : a.amount - b.amount);
 
     return (
         <div className="animation-fade-in">
@@ -54,7 +57,7 @@ const Transactions = ({ data, currency = 'USD', convert, format, onAddTransactio
                     <p>Detailed view of your financial records.</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     {['all', 'income', 'expense'].map(f => (
                         <button
                             key={f}
@@ -70,6 +73,26 @@ const Transactions = ({ data, currency = 'USD', convert, format, onAddTransactio
                             {f}
                         </button>
                     ))}
+
+                    {/* Sort Toggle */}
+                    <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 0.25rem' }} />
+                    <button
+                        onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                        className="btn"
+                        title={sortOrder === 'desc' ? 'Sorted: Highest to Lowest' : 'Sorted: Lowest to Highest'}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-secondary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            fontSize: '0.85rem'
+                        }}
+                    >
+                        {sortOrder === 'desc' ? <ArrowDownWideNarrow size={16} /> : <ArrowUpNarrowWide size={16} />}
+                        {sortOrder === 'desc' ? 'High → Low' : 'Low → High'}
+                    </button>
                 </div>
             </div>
 
