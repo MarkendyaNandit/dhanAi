@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target, Sparkles } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target, Sparkles, LogOut, UploadCloud } from 'lucide-react';
 
-const Navigation = () => {
+const Navigation = ({ onLogout, onNewUpload }) => {
   const tabs = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Forecast', path: '/forecast', icon: <TrendingUp size={20} /> },
@@ -46,6 +46,56 @@ const Navigation = () => {
           <span className="nav-text">{tab.name}</span>
         </NavLink>
       ))}
+
+      {/* New Upload button */}
+      {onNewUpload && (
+        <button
+          onClick={onNewUpload}
+          title="Upload New Statement"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '100px',
+            color: 'var(--accent-primary)',
+            background: 'none',
+            border: '1px solid var(--accent-primary)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontWeight: 500,
+            fontSize: 'inherit'
+          }}
+        >
+          <UploadCloud size={20} />
+          <span className="nav-text">New Upload</span>
+        </button>
+      )}
+
+      {/* Logout button */}
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          title="Logout"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '100px',
+            color: 'var(--danger)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontWeight: 500,
+            fontSize: 'inherit'
+          }}
+        >
+          <LogOut size={20} />
+          <span className="nav-text">Logout</span>
+        </button>
+      )}
     </nav>
   );
 };

@@ -216,7 +216,7 @@ function MainApp() {
         <div className="flex items-center gap-4">
           <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer' }} onClick={() => setStatementData(null)}>DhanAi</h2>
         </div>
-        <Navigation />
+        <Navigation onLogout={handleLogout} onNewUpload={() => setStatementData(null)} />
       </header>
 
       <main className="container" style={{ flex: 1, padding: '2rem 0' }}>
