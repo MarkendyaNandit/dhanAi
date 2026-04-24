@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import AIInsight from '../components/AIInsight';
-import { Plus, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
+import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
 
-const Transactions = ({ data, currency = 'USD', convert, format, onAddTransaction }) => {
+const Transactions = ({ data, currency = 'USD', convert, format }) => {
     const [filter, setFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState('desc');
 
@@ -140,28 +140,6 @@ const Transactions = ({ data, currency = 'USD', convert, format, onAddTransactio
                 </table>
             </div>
 
-            {/* Floating Action Button for Manual Entry */}
-            <button 
-                className="btn btn-primary" 
-                onClick={onAddTransaction}
-                style={{
-                    position: 'fixed',
-                    bottom: '2rem',
-                    right: '2rem',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
-                    zIndex: 100,
-                    padding: 0
-                }}
-                title="Add Transaction Manually"
-            >
-                <Plus size={30} />
-            </button>
         </div>
     );
 };

@@ -1,8 +1,8 @@
 import AIInsight from './AIInsight';
 import Charts from './Charts';
-import { ArrowUpRight, ArrowDownRight, Activity, Plus } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 
-const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format, onAddTransaction }) => {
+const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format }) => {
   if (!data) return null;
 
   const { 
@@ -139,29 +139,6 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format,
         </div>
       </div>
 
-
-      {/* Floating Action Button for Manual Entry */}
-      <button 
-        className="btn btn-primary" 
-        onClick={onAddTransaction}
-        style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)',
-          zIndex: 100,
-          padding: 0
-        }}
-        title="Add Transaction Manually"
-      >
-        <Plus size={30} />
-      </button>
 
     </div>
   );
