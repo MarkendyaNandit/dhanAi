@@ -94,3 +94,86 @@ export const sendEmailOTP = async (email, code) => {
         return { status: 'logged', error: error.message };
     }
 };
+
+/**
+ * Send Spending Alert via Email
+ */
+export const sendSpendingAlert = async (email, data) => {
+    try {
+        const transporter = await getTransporter();
+        await transporter.sendMail({
+            from: `"DhanAi Notifications" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: "⚠️ Spending Alert: Threshold Exceeded",
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; color: #333; background: #fafafa; border-radius: 12px; border: 1px solid #eee;">
+                    <h2 style="color: #ef4444;">Threshold Exceeded</h2>
+                    <p>Alert! Your recent spending has exceeded your set threshold.</p>
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p><strong>Recent Transaction:</strong> ${data.description}</p>
+                        <p><strong>Amount:</strong> ${data.amount}</p>
+                        <p><strong>Total Period Spending:</strong> ${data.totalSpending}</p>
+                        <p><strong>Your Threshold:</strong> ${data.threshold}</p>
+                    </div>
+                    <p style="font-size: 0.9rem; color: #666;">You can manage your alert preferences in the DhanAi settings.</p>
+                </div>
+            `,
+        });
+        console.log(`[MAIL] Spending alert sent to ${email}`);
+    } catch (error) {
+        console.error(`[MAIL-ERROR] Failed to send spending alert: ${error.message}`);
+    }
+};
+
+/**
+ * Send Weekly Summary via Email
+ */
+export const sendWeeklySummary = async (email, summary) => {
+    try {
+        const transporter = await getTransporter();
+        await transporter.sendMail({
+            from: `"DhanAi Weekly Reports" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: `📊 Your Financial Weekly Summary`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; color: #333; background: #fafafa; border-radius: 12px;">
+                    <h2 style="color: #6366f1;">Weekly Summary</h2>
+                    <p>Here is your financial overview for the past week:</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                        <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border: 1px solid #10b981;">
+                            <p style="margin: 0; color: #065f46; font-size: 0.8rem;">TOTAL INCOME</p>
+                            <h3 style="margin: 5px 0; color: #059669;">${summary.totalIncome}</h3>
+                        </div>
+                        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #ef4444;">
+                            <p style="margin: 0; color: #991b1b; font-size: 0.8rem;">TOTAL EXPENSES</p>
+                            <h3 style="margin: 5px 0; color: #dc2626;">${summary.totalExpense}</h3>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0;">Top Sending Categories:</h4>
+                        ${summary.topCategories.map(c => `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;">
+                                <span>${c.name}</span>
+                                <span style="font-weight: 600;">${c.amount}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #f59e0b;">
+                        <h4 style="margin: 0; color: #92400e;">💡 AI Insight</h4>
+                        <p style="margin: 8px 0 0; font-size: 0.9rem; color: #78350f; line-height: 1.4;">${summary.insight}</p>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: #999; margin-top: 25px; text-align: center;">
+                        Thank you for using DhanAi. Stay smart with your money!
+                    </p>
+                </div>
+            `,
+        });
+        console.log(`[MAIL] Weekly summary sent to ${email}`);
+    } catch (error) {
+        console.error(`[MAIL-ERROR] Failed to send weekly summary: ${error.message}`);
+    }
+};

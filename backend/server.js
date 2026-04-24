@@ -8,8 +8,12 @@ import forecastRoutes from './routes/forecast.js';
 import authRoutes from './routes/auth.js';
 import { startUserEmailListener } from './services/emailListener.js';
 import User from './models/User.js';
+import { initNotificationService } from './services/notificationService.js';
 
 dotenv.config();
+
+// Initialize Services
+initNotificationService();
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)

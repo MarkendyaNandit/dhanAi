@@ -38,7 +38,11 @@ const statementSchema = new mongoose.Schema({
     name: String,
     amount: Number,
     category: String
-  }]
+  }],
+  isAlertSent: {
+    type: Boolean,
+    default: false
+  }
 });
 
 export default mongoose.model('Statement', statementSchema);

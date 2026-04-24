@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Bell, Shield, Wallet, ChevronRight, UserCircle } from 'lucide-react';
+import { updateProfile } from '../api';
 
-const Settings = ({ data, theme, setTheme, currency, setCurrency }) => {
+const Settings = ({ data, currentUser, setCurrentUser, theme, setTheme, currency, setCurrency }) => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('notifications');
 
@@ -70,19 +71,94 @@ const Settings = ({ data, theme, setTheme, currency, setCurrency }) => {
                                 </p>
                                 <div className="flex-col gap-4">
                                     {[
-                                        { label: 'Spending Alerts', desc: 'Notify when a category exceeds budget.' },
-                                        { label: 'Weekly Summary', desc: 'Receive a personalized financial report every Sunday.' }
-                                    ].map((n, i) => (
-                                        <div key={i} className="flex items-center justify-between" style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                        { id: 'emailNotifications', label: 'Spending Alerts', desc: 'Notify when a category exceeds budget.' },
+                                        { id: 'weeklySummary', label: 'Weekly Summary', desc: 'Receive a personalized financial report every Sunday.' }
+                                    ].map((n) => (
+                                        <div key={n.id} className="flex items-center justify-between" style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                             <div>
                                                 <p style={{ fontWeight: 600, margin: 0 }}>{n.label}</p>
                                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{n.desc}</p>
                                             </div>
-                                            <div style={{ width: '44px', height: '24px', background: 'var(--accent-primary)', borderRadius: '12px', position: 'relative', cursor: 'pointer' }}>
-                                                <div style={{ position: 'absolute', right: '4px', top: '4px', width: '16px', height: '16px', background: 'white', borderRadius: '50%' }}></div>
+                                            <div 
+                                                onClick={async () => {
+                                                    const newValue = !currentUser[n.id];
+                                                    try {
+                                                        const response = await updateProfile(currentUser._id, { [n.id]: newValue });
+                                                        // Note: We need a way to update the global currentUser state.
+                                                        // In App.jsx, setCurrentUser is passed down or used.
+                                                        // Since this is a small change and user said 'dont change anything else',
+                                                        // I'll assume we can update it via a prop or just let it refresh.
+                                                        // The user passed 'currentUser' and we can use a callback if provided.
+                                                        // Let's check if setCurrentUser is available here.
+                                                        if (typeof setCurrentUser === 'function') {
+                                                            setCurrentUser(response.user);
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Failed to update preference:', err);
+                                                    }
+                                                }}
+                                                style={{ 
+                                                    width: '44px', 
+                                                    height: '24px', 
+                                                    background: currentUser[n.id] ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)', 
+                                                    borderRadius: '12px', 
+                                                    position: 'relative', 
+                                                    cursor: 'pointer' 
+                                                }}
+                                            >
+                                                <div style={{ 
+                                                    position: 'absolute', 
+                                                    left: currentUser[n.id] ? '24px' : '4px', 
+                                                    top: '4px', 
+                                                    width: '16px', 
+                                                    height: '16px', 
+                                                    background: 'white', 
+                                                    borderRadius: '50%',
+                                                    transition: '0.3s'
+                                                }}></div>
                                             </div>
                                         </div>
                                     ))}
+
+                                    <div className="flex-col gap-2" style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
+                                        <div className="flex items-center justify-between">
+                                            <p style={{ fontWeight: 600, margin: 0 }}>Spending Threshold ({currency})</p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Use Forecast</span>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={currentUser.useForecastThreshold} 
+                                                    onChange={async (e) => {
+                                                        try {
+                                                            const resp = await updateProfile(currentUser._id, { useForecastThreshold: e.target.checked });
+                                                            if (setCurrentUser) setCurrentUser(resp.user);
+                                                        } catch(err) {}
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <input 
+                                            type="number" 
+                                            className="chat-input"
+                                            disabled={currentUser.useForecastThreshold}
+                                            value={currentUser.spendingThreshold}
+                                            onChange={async (e) => {
+                                                // We don't want to save on every keystroke, maybe on blur or just update locally first
+                                            }}
+                                            onBlur={async (e) => {
+                                                try {
+                                                    const resp = await updateProfile(currentUser._id, { spendingThreshold: Number(e.target.value) });
+                                                    if (setCurrentUser) setCurrentUser(resp.user);
+                                                } catch(err) {}
+                                            }}
+                                            style={{ width: '100%', opacity: currentUser.useForecastThreshold ? 0.5 : 1 }}
+                                        />
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                            {currentUser.useForecastThreshold 
+                                                ? "Current threshold is automatically calculated from your latest AI forecast."
+                                                : "Manually set your spending limit for this period."}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

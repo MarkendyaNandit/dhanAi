@@ -42,16 +42,19 @@ router.post('/send-otp', async (req, res) => {
     console.log(`[AUTH] Generated OTP ${code} for Email: ${email} | Phone: ${phone}`);
 
     try {
-        const [mailResult] = await Promise.all([
+        const results = await Promise.all([
             sendEmailOTP(email, code),
             sendSMSOTP(phone, code)
         ]);
+        
+        const mailResult = results[0];
+        const smsResult = results[1];
 
         if (mailResult && mailResult.error && mailResult.status !== 'logged') {
             return res.status(500).json({ error: `Mail Connection Failed: ${mailResult.error}. Please ensure your Render environment variables for SMTP are correct.` });
         }
 
-        console.log(`[AUTH] OTP delivery complete for ${email}`);
+        console.log(`[AUTH] OTP delivery status - Email: ${mailResult.status || 'sent'}, SMS: ${smsResult.status || 'sent'}`);
         res.json({ message: 'OTP sent. Please check your email and phone.' });
     } catch (err) {
         console.error(`[AUTH] System failure dispatching OTP for ${email}:`, err);
@@ -104,7 +107,18 @@ router.post('/register', authLimiter, async (req, res) => {
         res.json({ 
             message: 'Registration successful', 
             token, // Return token here
-            user: { _id: newUser._id, email: newUser.email, name: newUser.name, phone: newUser.phone, accNo: newUser.accNo, imapPassword: newUser.imapPassword || '' } 
+            user: { 
+                _id: newUser._id, 
+                email: newUser.email, 
+                name: newUser.name, 
+                phone: newUser.phone, 
+                accNo: newUser.accNo, 
+                imapPassword: newUser.imapPassword || '',
+                emailNotifications: newUser.emailNotifications,
+                weeklySummary: newUser.weeklySummary,
+                spendingThreshold: newUser.spendingThreshold,
+                useForecastThreshold: newUser.useForecastThreshold
+            } 
         });
     } catch (err) {
         console.error('Registration Error:', err);
@@ -143,7 +157,18 @@ router.post('/login', authLimiter, async (req, res) => {
         res.json({ 
             message: 'Login successful', 
             token, // <-- Inject JWT
-            user: { _id: user._id, email: user.email, name: user.name, phone: user.phone, accNo: user.accNo, imapPassword: user.imapPassword || '' } 
+            user: { 
+                _id: user._id, 
+                email: user.email, 
+                name: user.name, 
+                phone: user.phone, 
+                accNo: user.accNo, 
+                imapPassword: user.imapPassword || '',
+                emailNotifications: user.emailNotifications,
+                weeklySummary: user.weeklySummary,
+                spendingThreshold: user.spendingThreshold,
+                useForecastThreshold: user.useForecastThreshold
+            } 
         });
     } catch (err) {
         res.status(500).json({ error: 'Login failed', details: err.message });
@@ -166,7 +191,18 @@ router.post('/update-profile', async (req, res) => {
 
         res.json({
             message: 'Profile updated successfully',
-            user: { _id: updatedUser._id, email: updatedUser.email, name: updatedUser.name, phone: updatedUser.phone, accNo: updatedUser.accNo, password: updatedUser.password, imapPassword: updatedUser.imapPassword || '' }
+            user: { 
+                _id: updatedUser._id, 
+                email: updatedUser.email, 
+                name: updatedUser.name, 
+                phone: updatedUser.phone, 
+                accNo: updatedUser.accNo, 
+                imapPassword: updatedUser.imapPassword || '',
+                emailNotifications: updatedUser.emailNotifications,
+                weeklySummary: updatedUser.weeklySummary,
+                spendingThreshold: updatedUser.spendingThreshold,
+                useForecastThreshold: updatedUser.useForecastThreshold
+            }
         });
     } catch (err) {
         res.status(500).json({ error: 'Update failed', details: err.message });

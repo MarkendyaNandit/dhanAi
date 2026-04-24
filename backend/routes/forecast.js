@@ -30,6 +30,19 @@ router.post('/', async (req, res) => {
         // Cache the successful result if we have an ID
         if (statementId) {
             forecastCache[statementId] = forecastData;
+            
+            // Sync user's spending threshold from the forecast if applicable
+            try {
+                const User = (await import('../models/User.js')).default;
+                const user = await User.findById(context.userId);
+                if (user && user.useForecastThreshold) {
+                    user.spendingThreshold = forecastData.predictedExpense;
+                    await user.save();
+                    console.log(`[FORECAST] Updated spending threshold for ${user.email} to ${user.spendingThreshold}`);
+                }
+            } catch (err) {
+                console.warn('[FORECAST] Soft failure updating user threshold:', err.message);
+            }
         }
 
         res.json(forecastData);

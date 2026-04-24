@@ -32,6 +32,23 @@ const userSchema = new mongoose.Schema({
   googleRefreshToken: {
     type: String,
     default: ''
+  },
+  // Notification Preferences
+  emailNotifications: {
+    type: Boolean,
+    default: true
+  },
+  weeklySummary: {
+    type: Boolean,
+    default: true
+  },
+  spendingThreshold: {
+    type: Number,
+    default: 5000
+  },
+  useForecastThreshold: {
+    type: Boolean,
+    default: true
   }
 }, { timestamps: true });
 

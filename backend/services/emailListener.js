@@ -3,6 +3,7 @@ import { simpleParser } from 'mailparser';
 import { parseRawMessages } from './aiService.js';
 import Statement from '../models/Statement.js';
 import { OAuth2Client } from 'google-auth-library';
+import { checkSpendingAlert } from './notificationService.js';
 
 const activeConnections = new Map(); // userId -> connection object
 
@@ -137,6 +138,9 @@ const checkUserUnreadEmails = async (userId, userEmail) => {
                         $push: { transactions: { $each: newTrxs } },
                         $inc: { totalIncome: incomeAdd, totalExpense: expenseAdd }
                     });
+
+                    // Check for spending alerts after sync
+                    checkSpendingAlert(userId, newTrxs);
 
                     console.log(`[SYNC] Appended ${newTrxs.length} transactions to statement for user ${userEmail}.`);
                 }

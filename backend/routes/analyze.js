@@ -33,6 +33,9 @@ router.post('/', upload.single('statement'), async (req, res) => {
       essentials: analysisResult.essentials
     });
 
+    // Check for spending alerts
+    import('../services/notificationService.js').then(m => m.checkSpendingAlert(userId, analysisResult.transactions));
+
     res.json({
       message: 'Analysis complete',
       data: newStatement
@@ -56,6 +59,29 @@ router.get('/', async (req, res) => {
   }
 });
 
+// New Route: Sync check for transactions (called by frontend autoSync)
+router.get('/sync', async (req, res) => {
+    try {
+        // Since background listener already appends to DB, we just return empty list 
+        // to avoid double-counting in frontend, but acknowledge the sync happened.
+        res.json({ message: 'Sync active', newTransactions: [] });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// New Route: Parse raw text/emails manually
+router.post('/parse-text', async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ error: 'Text required' });
+
+        const result = await parseRawMessages(text);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 router.get('/:id', async (req, res) => {
   try {

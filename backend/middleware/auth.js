@@ -29,7 +29,7 @@ export const protect = (req, res, next) => {
   // Graceful fallback during transition: if frontend hasn't updated its token yet
   // but passed a userId in body or query, we allow it (simulate old behavior)
   // Remove this fallback section once strict JWT enforcement is desired.
-  const fallbackId = req.body.userId || req.query.userId || req.headers['x-user-id'];
+  const fallbackId = req.body?.userId || req.query.userId || req.headers['x-user-id'];
   if (fallbackId) {
     req.user = { id: fallbackId };
     return next();

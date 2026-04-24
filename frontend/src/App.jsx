@@ -320,7 +320,7 @@ function MainApp() {
           <Route path="/goals" element={<GoalPlanner data={statementData} currency={currency} />} />
           <Route path="/transactions" element={<Transactions data={statementData} currency={currency} />} />
           <Route path="/chat" element={<Chatbot data={statementData} />} />
-          <Route path="/settings" element={<Settings data={statementData} onLogout={handleLogout} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
+          <Route path="/settings" element={<Settings data={statementData} currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
           <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
           <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           <Route path="/auth/google/callback" element={<GoogleCallback currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
