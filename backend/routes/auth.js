@@ -22,10 +22,12 @@ router.get('/me', protect, async (req, res) => {
     }
 });
 
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5174').replace(/\/+$/, '');
+
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.FRONTEND_URL || 'http://localhost:5174'}/auth/google/callback`
+  `${FRONTEND_URL}/auth/google/callback`
 );
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_development';
