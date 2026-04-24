@@ -1,103 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import NProgress from 'nprogress';
-import 'nprogress/nprogress.css';
-import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction } from './api';
+import { uploadStatement, fetchHistory, syncTransactions, updateOverview, addManualTransaction, fetchCurrentUser } from './api';
 import { convertCurrency, formatCurrency } from './utils/currency';
 
+// Components & Pages
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import Navigation from './components/Navigation';
-import ManualTransactionModal from './components/ManualTransactionModal';
-
-import Forecast from './pages/Forecast';
-import GoalPlanner from './pages/GoalPlanner';
-import Chatbot from './pages/Chatbot';
 import Transactions from './pages/Transactions';
+import Forecast from './pages/Forecast';
 import Settings from './pages/Settings';
-import SecuritySettings from './pages/SecuritySettings';
-import AccountDetails from './pages/AccountDetails';
+import AIParser from './pages/AIParser';
+import Chatbot from './pages/Chatbot';
+import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import GoogleCallback from './pages/GoogleCallback';
+import ManualTransactionModal from './components/ManualTransactionModal';
+
+import './App.css';
 
 function MainApp() {
   const location = useLocation();
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    NProgress.start();
-    const timer = setTimeout(() => {
-      NProgress.done();
-    }, 200);
-    return () => {
-      clearTimeout(timer);
-      NProgress.done();
-    };
-  }, [location.pathname]);
-
-  const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [statementData, setStatementData] = useState(null);
   const [history, setHistory] = useState([]);
-  const [currency, setCurrency] = useState('USD');
-  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'USD');
+  const [newAdhocTransactions, setNewAdhocTransactions] = useState([]);
 
+  // Persistence: Session restoration
   useEffect(() => {
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    if (currentUser) {
-      loadHistory();
-      // Initial sync
-      autoSync();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchCurrentUser()
+        .then(user => {
+          setCurrentUser(user);
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        })
+        .finally(() => setIsAppLoading(false));
+    } else {
+      setIsAppLoading(false);
     }
-  }, [currentUser]);
+  }, []);
 
-  const [syncRetryCount, setSyncRetryCount] = useState(0);
-
-  useEffect(() => {
+  const loadHistory = async () => {
     if (!currentUser) return;
-
-    // Periodic sync every 2 minutes with backoff on failure
-    const intervalTime = Math.min(120000 * Math.pow(2, syncRetryCount), 3600000); // max 1 hour
-    const timer = setInterval(() => {
-        autoSync();
-    }, intervalTime);
-
-    return () => clearInterval(timer);
-  }, [currentUser, syncRetryCount]);
+    try {
+      const data = await fetchHistory(currentUser._id);
+      setHistory(data);
+    } catch (err) {
+      console.error("Failed to load history:", err);
+    }
+  };
 
   const autoSync = async () => {
-    if (isSyncing) return;
+    if (isSyncing || !currentUser) return;
     setIsSyncing(true);
     try {
-      const syncData = await syncTransactions();
-      if (syncData.newTransactions && syncData.newTransactions.length > 0) {
-        console.log("[SYNC] Found new transactions from Email Sync:", syncData.newTransactions);
-        // Store found transactions to merge when a statement is loaded
-        setNewAdhocTransactions(prev => {
-            // Avoid duplicates
-            const filtered = syncData.newTransactions.filter(nt => 
-                !prev.some(p => p.description === nt.description && p.amount === nt.amount)
-            );
-            return [...prev, ...filtered];
-        });
+      const res = await syncTransactions(currentUser._id);
+      if (res.newTransactions && res.newTransactions.length > 0) {
+        setNewAdhocTransactions(prev => [...prev, ...res.newTransactions]);
       }
-      setSyncRetryCount(0); // Reset on success
     } catch (err) {
-      console.warn("Auto-sync failed, retrying later:", err);
-      setSyncRetryCount(prev => prev + 1);
+      console.error("Sync failed:", err);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const [newAdhocTransactions, setNewAdhocTransactions] = useState([]);
+  // Fetch history when user is available
+  useEffect(() => {
+    if (currentUser) {
+      loadHistory();
+      // Initial sync if user has IMAP/Gmail configured
+      if (currentUser.imapPassword || currentUser.googleRefreshToken) {
+          autoSync();
+      }
+    }
+  }, [currentUser]);
+
+  const mergeData = async () => {
+    if (!statementData || newAdhocTransactions.length === 0) return;
+    
+    const updatedTransactions = [...statementData.transactions, ...newAdhocTransactions];
+    const newTotalIncome = updatedTransactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const newTotalExpense = updatedTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    setStatementData(prev => ({
+      ...prev,
+      transactions: updatedTransactions,
+      totalIncome: newTotalIncome,
+      totalExpense: newTotalExpense
+    }));
+    
+    setNewAdhocTransactions([]);
+
+    try {
+      const result = await updateOverview(updatedTransactions, newTotalIncome, newTotalExpense);
+      setStatementData(prev => ({
+        ...prev,
+        overview: result.overview,
+        insights: result.insights || prev.insights,
+        essentials: result.essentials || prev.essentials
+      }));
+    } catch (err) {
+      console.error("Failed to update AI overview:", err);
+    }
+  };
 
   useEffect(() => {
     if (statementData && newAdhocTransactions.length > 0) {
@@ -105,72 +123,18 @@ function MainApp() {
     }
   }, [statementData, newAdhocTransactions]);
 
-  const mergeData = async () => {
-    // Avoid duplicate merging if already merged
-    const alreadyMerged = newAdhocTransactions.every(nt =>
-      statementData.transactions.some(st => st.description === nt.description && st.amount === nt.amount)
-    );
-
-    if (alreadyMerged) return;
-
-    console.log("[MERGE] Merging ad-hoc transactions into statement...");
-    const updatedTransactions = [...statementData.transactions, ...newAdhocTransactions];
-
-    let extraIncome = 0;
-    let extraExpense = 0;
-    newAdhocTransactions.forEach(t => {
-      if (t.type === 'income') extraIncome += t.amount;
-      else extraExpense += t.amount;
-    });
-
-    const newTotalIncome = (statementData.totalIncome || 0) + extraIncome;
-    const newTotalExpense = (statementData.totalExpense || 0) + extraExpense;
-
-    // Update basic counts first
-    setStatementData({
-      ...statementData,
-      transactions: updatedTransactions,
-      totalIncome: newTotalIncome,
-      totalExpense: newTotalExpense
-    });
-
-    // Clear queue
-    setNewAdhocTransactions([]);
-
-    // Request updated AI overview and essentials based on NEW consolidated data
-    try {
-      setIsSyncing(true);
-      const { overview, essentials, insights } = await updateOverview(updatedTransactions, newTotalIncome, newTotalExpense);
-      setStatementData(prev => ({
-        ...prev,
-        overview: overview,
-        insights: insights || prev.insights,
-        essentials: essentials || prev.essentials
-      }));
-    } catch (err) {
-      console.error("Failed to update AI overview:", err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    if (!currentUser?._id) return;
-    try {
-      const data = await fetchHistory(currentUser._id);
-      setHistory(data);
-    } catch (err) {
-      console.error('Failed to load history:', err);
-    }
-  };
-
   const handleUpload = async (file) => {
     setLoading(true);
     setError(null);
     try {
       const response = await uploadStatement(file, currentUser._id);
-      setStatementData(response.data);
-      loadHistory();
+      console.log("Upload response:", response);
+      if (response && response.data) {
+          setStatementData(response.data);
+          loadHistory();
+      } else {
+          throw new Error("Invalid response from server");
+      }
     } catch (err) {
       setError(err.message || 'An error occurred during analysis.');
     } finally {
@@ -183,218 +147,141 @@ function MainApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleManualSave = async (txData) => {
-    try {
-        setLoading(true);
-        const result = await addManualTransaction(txData);
-        // Refresh the current statement data
-        const updatedHistory = await fetchHistory(currentUser._id);
-        setHistory(updatedHistory);
-        // Find the updated version of current statement
-        const updatedStatement = updatedHistory.find(s => s._id === result.statementId);
-        if (updatedStatement) {
-            setStatementData(updatedStatement);
-        }
-        alert('Transaction added successfully!');
-    } catch (err) {
-        alert('Failed to add transaction: ' + err.message);
-    } finally {
-        setLoading(false);
-    }
-  };
-
   const handleLogout = () => {
     setCurrentUser(null);
     setStatementData(null);
     localStorage.removeItem('token');
   };
 
-  // Auto-detect user's currency based on their device location (GeoIP)
+  const handleAddManual = async (tx) => {
+    try {
+      const saved = await addManualTransaction(tx);
+      setNewAdhocTransactions(prev => [...prev, saved]);
+      setIsModalOpen(false);
+    } catch (err) {
+      alert("Failed to add transaction: " + err.message);
+    }
+  };
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    document.body.className = `${theme}-theme`;
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('currency', currency);
+  }, [currency]);
+
+  // Handle currency auto-detection
   useEffect(() => {
     const detectCurrency = async () => {
       try {
-        // 1. Try GeoIP detection for "whole device location"
-        const geoResponse = await fetch('https://ipapi.co/json/');
-        const geoData = await geoResponse.json();
-
-        if (geoData.currency) {
-          console.log(`[LOCALE] Detected currency from GeoIP (${geoData.country_name}): ${geoData.currency}`);
-          setCurrency(geoData.currency);
-          return;
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data.currency === 'INR' || data.country === 'IN') {
+          setCurrency('INR');
         }
-      } catch (err) {
-        console.warn("[LOCALE] GeoIP detection failed, falling back to browser locale:", err);
-      }
-
-      // 2. Fallback: browser locale & timezone logic
-      try {
-        const getDetectedCurrency = () => {
-          // Try to get region from navigator.language
-          let region = null;
-          if (typeof Intl !== 'undefined' && Intl.Locale && navigator.language) {
-            region = new Intl.Locale(navigator.language).region;
-          }
-
-          // Fallback: Parse from navigator.language string (e.g. "en-IN" -> "IN")
-          if (!region && navigator.language.includes('-')) {
-            region = navigator.language.split('-')[1].toUpperCase();
-          }
-
-          // Fallback: Try to guess from Timezone
-          if (!region && typeof Intl !== 'undefined') {
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            if (tz.includes('Asia/Kolkata') || tz.includes('Asia/Calcutta')) return 'INR';
-            if (tz.includes('Europe/London')) return 'GBP';
-            if (tz.includes('Europe/')) return 'EUR';
-            if (tz.includes('Australia/')) return 'AUD';
-            if (tz.includes('Asia/Tokyo')) return 'JPY';
-          }
-
-          const currencyMap = {
-            'US': 'USD', 'GB': 'GBP', 'IN': 'INR', 'JP': 'JPY',
-            'AU': 'AUD', 'CA': 'CAD', 'SG': 'SGD', 'CH': 'CHF', 'AE': 'AED'
-          };
-          const euroZone = ['AT', 'BE', 'CY', 'EE', 'FI', 'FR', 'DE', 'GR', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PT', 'SK', 'SI', 'ES'];
-
-          if (euroZone.includes(region)) return 'EUR';
-          if (region && currencyMap[region]) return currencyMap[region];
-          return 'USD';
-        };
-
-        setCurrency(getDetectedCurrency());
-      } catch (e) {
-        console.warn("[LOCALE] Browser locale detection also failed, falling back to USD", e);
-        setCurrency('USD');
-      }
+      } catch (e) {}
     };
-
-    detectCurrency();
+    if (!localStorage.getItem('currency')) detectCurrency();
   }, []);
 
-  if (!currentUser) {
+  // Use useMemo for props passed to routes to prevent unnecessary re-renders
+  const convertFn = useMemo(() => (amt) => convertCurrency(amt, 'INR', currency), [currency]);
+  const formatFn = useMemo(() => (amt) => formatCurrency(amt, currency), [currency]);
+
+  if (isAppLoading) {
     return (
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    );
-  }
-
-  // If we don't have statement data loaded, show the upload screen first
-  if (!statementData) {
-    return (
-      <div className={`app-container ${theme}-theme`} style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', padding: '2rem' }}>
-        <header className="app-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div>
-              <h1 className="text-gradient" style={{ margin: 0 }}>DhanAi</h1>
-              <p style={{ margin: '0.5rem 0 0' }}>Uncover your spending habits with smart AI insights.</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontWeight: 600, margin: 0 }}>{currentUser.name}</p>
-              <button onClick={handleLogout} style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>Logout</button>
-            </div>
-          </div>
-          <div style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 500 }}>
-              Auto-detected Currency: {currency}
-            </span>
-          </div>
-        </header>
-
-        <main>
-          {!loading && <UploadSection onUpload={handleUpload} />}
-
-          {loading && (
-            <div className="loader-container">
-              <div className="spinner"></div>
-              <p className="text-gradient" style={{ fontSize: '1.2rem', fontWeight: 600 }}>
-                AI is analyzing your statement...
-              </p>
-              <p style={{ color: 'var(--text-secondary)' }}>This might take a few seconds.</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="glass-card" style={{ maxWidth: '600px', margin: '0 auto 2rem', border: '1px solid var(--danger)', background: 'var(--danger-bg)' }}>
-              <h3 style={{ color: 'var(--danger)', marginBottom: '0.5rem' }}>Analysis Failed</h3>
-              <p>{error}</p>
-              <button className="btn" style={{ marginTop: '1rem' }} onClick={() => setError(null)}>Try Again</button>
-            </div>
-          )}
-
-          {!loading && history.length > 0 && (
-            <div className="glass-card" style={{ marginTop: '4rem', animation: 'fadeInUp 1s ease-out' }}>
-              <h3 className="section-title">Previous Analysis History</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                {history.map(item => (
-                  <div
-                    key={item._id}
-                    className="glass-card"
-                    style={{ padding: '1rem', cursor: 'pointer' }}
-                    onClick={() => handleViewHistory(item)}
-                  >
-                    <p style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{item.filename}</p>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                      {new Date(item.uploadDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
+      <div className={`app-container ${theme}-theme flex items-center justify-center`} style={{ height: '100vh' }}>
+        <div className="spinner"></div>
       </div>
     );
   }
 
-  // Once data is loaded, show the full tabbed application
+  // Not logged in -> Show Home, Login or Register
+  if (!currentUser) {
+    return (
+      <div className={`app-container ${theme}-theme`}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login onLogin={(user) => setCurrentUser(user)} />} />
+          <Route path="/register" element={<Register onLogin={(user) => setCurrentUser(user)} />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
+    );
+  }
+
   return (
-    <div className={`app-container ${theme}-theme`} style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-      <header className="navbar flex items-center justify-between p-4" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
-        <div>
-          <h2 className="text-gradient" style={{ margin: 0 }}>DhanAi</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Account: {currentUser.name}</p>
+    <div className={`app-container ${theme}-theme`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <header className="navbar flex items-center justify-between p-4" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 1000 }}>
+        <div className="flex items-center gap-4">
+          <h2 className="text-gradient" style={{ margin: 0, cursor: 'pointer' }} onClick={() => setStatementData(null)}>DhanAi</h2>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.4rem 1rem', borderRadius: '100px' }}>
-            Currency: {currency}
-          </span>
-          <button
-            className="btn"
-            onClick={() => setStatementData(null)}
-            style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '0.5rem 1.5rem' }}
-          >
-            Upload New
-          </button>
-          <button onClick={handleLogout} style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.9rem' }}>Logout</button>
-        </div>
+        <Navigation onLogout={handleLogout} />
       </header>
 
-      <Navigation />
-
-      <main style={{ minHeight: '60vh', padding: '2rem' }}>
+      <main className="container" style={{ flex: 1, padding: '2rem 0' }}>
         <Routes>
-          <Route path="/" element={<Dashboard data={statementData} currency={currency} isSyncing={isSyncing} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} onAddTransaction={() => setIsModalOpen(true)} />} />
-          <Route path="/forecast" element={<Forecast data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
-          <Route path="/goals" element={<GoalPlanner data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
-          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} onAddTransaction={() => setIsModalOpen(true)} />} />
-          <Route path="/chat" element={<Chatbot data={statementData} convert={(amt) => convertCurrency(amt, 'INR', currency)} format={(amt) => formatCurrency(amt, currency)} />} />
-          <Route path="/settings" element={<Settings data={statementData} currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
-          <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
-          <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+          <Route path="/" element={
+            statementData ? (
+              <Dashboard 
+                data={statementData} 
+                currency={currency} 
+                isSyncing={isSyncing}
+                convert={convertFn}
+                format={formatFn}
+                onAddTransaction={() => setIsModalOpen(true)}
+              />
+            ) : (
+              <div className="animation-fade-in">
+                <div className="app-header">
+                  <h1 className="text-gradient">Financial Insights</h1>
+                  <p>Upload your bank statement to begin analysis.</p>
+                </div>
+                
+                <div className="upload-container">
+                  {error && (
+                    <div className="glass-card" style={{ border: '1px solid var(--danger)', background: 'var(--danger-bg)', marginBottom: '1.5rem' }}>
+                      <p style={{ color: 'var(--danger)', margin: 0 }}>{error}</p>
+                    </div>
+                  )}
+                  
+                  {loading ? (
+                    <div className="loader-container glass-card">
+                      <div className="spinner"></div>
+                      <p>Analyzing your financial data...</p>
+                    </div>
+                  ) : (
+                    <UploadSection onUpload={handleUpload} />
+                  )}
+                </div>
+
+                {history.length > 0 && !loading && (
+                  <History history={history} onSelect={handleViewHistory} />
+                )}
+              </div>
+            )
+          } />
+
+          <Route path="/transactions" element={<Transactions data={statementData} currency={currency} convert={convertFn} format={formatFn} onAddTransaction={() => setIsModalOpen(true)} />} />
+          <Route path="/forecast" element={<Forecast data={statementData} currency={currency} convert={convertFn} format={formatFn} />} />
+          <Route path="/chat" element={<Chatbot currentUser={currentUser} statementData={statementData} />} />
+          <Route path="/settings/*" element={<Settings user={currentUser} onUpdateUser={setCurrentUser} theme={theme} setTheme={setTheme} currency={currency} setCurrency={setCurrency} />} />
+          <Route path="/ai-parser" element={<AIParser onAddTransactions={(txs) => setNewAdhocTransactions(prev => [...prev, ...txs])} />} />
           <Route path="/auth/google/callback" element={<GoogleCallback currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
+          
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
 
-      <ManualTransactionModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSave={handleManualSave} 
-      />
+      {isModalOpen && (
+        <ManualTransactionModal 
+          onClose={() => setIsModalOpen(false)} 
+          onSave={handleAddManual}
+          currency={currency}
+        />
+      )}
     </div>
   );
 }

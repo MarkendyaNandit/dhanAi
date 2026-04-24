@@ -22,8 +22,9 @@ const AIParser = ({ onAddTransactions }) => {
     };
 
     const handleConfirm = () => {
-        // In a real app, this would merge into the global state
-        // For now, we'll just show a success message
+        if (onAddTransactions) {
+            onAddTransactions(parsedData.transactions);
+        }
         alert('Successfully parsed ' + parsedData.transactions.length + ' transactions from your messages!');
         setParsedData(null);
         setText('');
@@ -88,7 +89,7 @@ const AIParser = ({ onAddTransactions }) => {
                                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t.date} • {t.category}</span>
                                     </div>
                                     <span className={`transaction-amount ${t.type}`}>
-                                        {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                                        {t.type === 'income' ? '+' : '-'}${(t.amount || 0).toFixed(2)}
                                     </span>
                                 </div>
                             ))}

@@ -199,5 +199,13 @@ export const parseText = async (text) => {
     }
     return safeParseJson(response);
 };
+ 
+export const fetchCurrentUser = async () => {
+    const response = await fetch(`${API_URL}/auth/me`, {
+        headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Session expired');
+    return safeParseJson(response);
+};
 
 

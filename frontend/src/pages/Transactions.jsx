@@ -5,22 +5,9 @@ import { Plus } from 'lucide-react';
 const Transactions = ({ data, currency = 'USD', convert, format, onAddTransaction }) => {
     const [filter, setFilter] = useState('all');
 
-    if (!data || !data.transactions) {
-        return (
-            <div className="glass-card flex-col items-center justify-center p-8" style={{ minHeight: '400px', textAlign: 'center' }}>
-                <h3>No Data Available</h3>
-                <p style={{ color: 'var(--text-secondary)' }}>Please upload a statement on the Dashboard first.</p>
-            </div>
-        );
-    }
-
-    const filtered = data.transactions.filter(tx => {
-        if (filter === 'all') return true;
-        return tx.type === filter;
-    });
-
     // Build rich insight text with JS fallback
     const insightText = useMemo(() => {
+        if (!data || !data.transactions) return null;
         const backendInsight = data.insights?.transactions;
         if (backendInsight && backendInsight.length > 20) return backendInsight;
 
@@ -44,6 +31,20 @@ const Transactions = ({ data, currency = 'USD', convert, format, onAddTransactio
             (top3 ? `Breakdown: ${top3}. ` : '') +
             (totalExp > totalInc * 0.8 ? '⚠️ High expense-to-income ratio — review recurring costs.' : '✅ Spending pattern looks healthy.');
     }, [data, format, convert]);
+
+    if (!data || !data.transactions) {
+        return (
+            <div className="glass-card flex-col items-center justify-center p-8" style={{ minHeight: '400px', textAlign: 'center' }}>
+                <h3>No Data Available</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Please upload a statement on the Dashboard first.</p>
+            </div>
+        );
+    }
+
+    const filtered = data.transactions.filter(tx => {
+        if (filter === 'all') return true;
+        return tx.type === filter;
+    });
 
     return (
         <div className="animation-fade-in">

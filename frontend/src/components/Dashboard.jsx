@@ -2,36 +2,47 @@ import AIInsight from './AIInsight';
 import Charts from './Charts';
 import { ArrowUpRight, ArrowDownRight, Activity, Plus } from 'lucide-react';
 
-const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format }) => {
+const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format, onAddTransaction }) => {
   if (!data) return null;
 
-  const { overview, insights, totalIncome, totalExpense, transactions } = data;
+  const { 
+    overview, 
+    insights, 
+    totalIncome = 0, 
+    totalExpense = 0, 
+    transactions = [] 
+  } = data || {};
 
-  const remaining = totalIncome - totalExpense;
+  const remaining = (totalIncome || 0) - (totalExpense || 0);
 
   // Build a rich insight text with fallbacks
   const insightText = (() => {
-    const dash = insights?.dashboard;
-    if (dash && dash.length > 30) return dash;
-    if (overview && overview.length > 30) return overview;
-    // Compute from raw numbers
-    if (totalIncome > 0 || totalExpense > 0) {
-      const savingsRate = totalIncome > 0 ? ((remaining / totalIncome) * 100).toFixed(1) : 0;
-      const topCat = transactions && transactions.length > 0
-        ? Object.entries(
-            transactions.filter(t => t.type === 'expense').reduce((acc, t) => {
-              const cat = t.category || 'Other';
-              acc[cat] = (acc[cat] || 0) + t.amount;
-              return acc;
-            }, {})
-          ).sort((a, b) => b[1] - a[1])[0]
-        : null;
+    try {
+      const dash = insights?.dashboard;
+      if (typeof dash === 'string' && dash.length > 30) return dash;
+      if (typeof overview === 'string' && overview.length > 30) return overview;
       
-      return remaining >= 0
-        ? `Savings rate: ${savingsRate}% — You have ${format(convert(remaining))} surplus this period.${topCat ? ` Top spending category: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Keep it up!`
-        : `⚠️ Overspending: Expenses exceed income by ${format(convert(Math.abs(remaining)))}.${topCat ? ` Largest cost: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Review non-essentials.`;
+      // Compute from raw numbers if transactions exist and are valid
+      if (((totalIncome || 0) > 0 || (totalExpense || 0) > 0) && Array.isArray(transactions)) {
+        const savingsRate = totalIncome > 0 ? ((remaining / totalIncome) * 100).toFixed(1) : 0;
+        const topCat = transactions.length > 0
+          ? Object.entries(
+              transactions.filter(t => t && t.type === 'expense').reduce((acc, t) => {
+                const cat = t.category || 'Other';
+                acc[cat] = (acc[cat] || 0) + (t.amount || 0);
+                return acc;
+              }, {})
+            ).sort((a, b) => b[1] - a[1])[0]
+          : null;
+        
+        return remaining >= 0
+          ? `Savings rate: ${savingsRate}% — You have ${format(convert(remaining))} surplus this period.${topCat ? ` Top spending category: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Keep it up!`
+          : `⚠️ Overspending: Expenses exceed income by ${format(convert(Math.abs(remaining)))}.${topCat ? ` Largest cost: ${topCat[0]} (${format(convert(topCat[1]))}).` : ''} Review non-essentials.`;
+      }
+    } catch (e) {
+      console.error("Error computing insight text:", e);
     }
-    return null;
+    return overview || (typeof insights?.dashboard === 'string' ? insights.dashboard : null);
   })();
 
   return (
@@ -70,7 +81,7 @@ const Dashboard = ({ data, currency = 'USD', isSyncing = false, convert, format 
           </div>
           <span className="stat-value expense">{format(convert(totalExpense))}</span>
         </div>
-
+        
         <div className="glass-card stat-card">
           <div className="flex items-center justify-between">
              <span className="stat-label">Net Remaining</span>

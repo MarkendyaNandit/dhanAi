@@ -6,7 +6,7 @@ const AIInsight = ({ title = "AI Insight", insight, color = "var(--accent-primar
 
   // Dynamic currency replacement logic
   const processedInsight = (() => {
-    if (!format || !convert) return insight;
+    if (!format || !convert || typeof insight !== 'string') return insight;
     
     // Match patterns like ₹5,000, $100, or raw 5000 followed by "in expenses" etc.
     // This is a heuristic to replace hardcoded INR values with converted ones.

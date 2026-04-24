@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, MessageSquare, ListTree, Settings, Target, Sparkles } from 'lucide-react';
 
 const Navigation = () => {
   const tabs = [
@@ -8,6 +8,7 @@ const Navigation = () => {
     { name: 'Forecast', path: '/forecast', icon: <TrendingUp size={20} /> },
     { name: 'Transactions', path: '/transactions', icon: <ListTree size={20} /> },
     { name: 'Goal Planner', path: '/goals', icon: <Target size={20} /> },
+    { name: 'AI Extract', path: '/ai-parser', icon: <Sparkles size={20} /> },
     { name: 'AI Chat', path: '/chat', icon: <MessageSquare size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> }
   ];

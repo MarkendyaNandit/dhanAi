@@ -8,7 +8,19 @@ import { sendSMSOTP } from '../services/smsService.js';
 import { startUserEmailListener } from '../services/emailListener.js';
 import { OAuth2Client } from 'google-auth-library';
 
+import { protect } from '../middleware/auth.js';
+
 const router = express.Router();
+
+router.get('/me', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,

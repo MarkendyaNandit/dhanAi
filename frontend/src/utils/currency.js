@@ -29,6 +29,7 @@ export const formatCurrency = (amount, currencyCode, locale = 'en-US') => {
         }).format(amount);
     } catch (e) {
         const symbols = { INR: '₹', USD: '$', EUR: '€', GBP: '£' };
-        return `${symbols[currencyCode] || currencyCode}${amount.toLocaleString()}`;
+        const valStr = (amount !== undefined && amount !== null) ? amount.toLocaleString() : '0';
+        return `${symbols[currencyCode] || currencyCode}${valStr}`;
     }
 };
