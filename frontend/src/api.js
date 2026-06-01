@@ -34,7 +34,7 @@ export const uploadStatement = async (file, userId, password = null) => {
     formData.append('password', password);
   }
 
-  const response = await fetch(`${API_URL}/statement`, {
+  const response = await fetch(`${API_URL}/uploads`, {
     method: 'POST',
     headers: getAuthHeaders(true),
     body: formData,
@@ -49,7 +49,7 @@ export const uploadStatement = async (file, userId, password = null) => {
 };
 
 export const fetchHistory = async (userId) => {
-    const response = await fetch(`${API_URL}/statement?userId=${userId}`, {
+    const response = await fetch(`${API_URL}/uploads?userId=${userId}`, {
         headers: getAuthHeaders()
     });
     if (!response.ok) {
@@ -118,7 +118,7 @@ export const verifyOTP = async (email, code) => {
 };
 
 export const syncTransactions = async () => {
-    const response = await fetch(`${API_URL}/statement/sync`, {
+    const response = await fetch(`${API_URL}/uploads/sync`, {
         headers: getAuthHeaders()
     });
     if (!response.ok) throw new Error('Sync failed');
@@ -126,7 +126,7 @@ export const syncTransactions = async () => {
 };
 
 export const updateOverview = async (transactions, totalIncome, totalExpense, userId, persist) => {
-    const response = await fetch(`${API_URL}/statement/update-overview`, {
+    const response = await fetch(`${API_URL}/uploads/update-overview`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ transactions, totalIncome, totalExpense, userId, persist })
@@ -136,7 +136,7 @@ export const updateOverview = async (transactions, totalIncome, totalExpense, us
 };
 
 export const addManualTransaction = async (txData) => {
-    const response = await fetch(`${API_URL}/statement/transaction`, {
+    const response = await fetch(`${API_URL}/uploads/transaction`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(txData)
@@ -196,7 +196,7 @@ export const linkGoogleAccount = async (code, userId) => {
 };
 
 export const parseText = async (text) => {
-    const response = await fetch(`${API_URL}/statement/parse-text`, {
+    const response = await fetch(`${API_URL}/uploads/parse-text`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ text })
