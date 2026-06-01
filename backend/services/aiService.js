@@ -156,10 +156,14 @@ export const analyzeStatementData = async (fileContent) => {
             const delimiter = lines[0].includes(';') ? ';' : ',';
             const headers = lines[0].toLowerCase().split(delimiter).map(h => h.replace(/(^["']|["']$)/g, '').trim());
 
-            const dateIdx = headers.findIndex(h => h.includes('date'));
-            const descIdx = headers.findIndex(h => h.includes('desc') || h.includes('memo') || h.includes('trans'));
-            const amtIdx = headers.findIndex(h => h.includes('amount') || h.includes('value') || h.includes('total'));
+            const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('time') || h.includes('txn date') || h.includes('tran date') || h.includes('dt'));
+            let descIdx = headers.findIndex(h => h.includes('desc') || h.includes('memo') || h.includes('trans') || h.includes('narr') || h.includes('particular') || h.includes('detail') || h.includes('remark') || h.includes('ref') || h.includes('payee') || h.includes('merchant') || h.includes('note') || h.includes('info') || h.includes('name') || h.includes('label'));
+            const amtIdx = headers.findIndex(h => h.includes('amount') || h.includes('value') || h.includes('total') || h.includes('debit') || h.includes('credit') || h.includes('inr') || h.includes('rs') || h.includes('rupee') || h.includes('dr') || h.includes('cr') || h.includes('amt'));
             const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('category'));
+
+            if (descIdx === -1) {
+                descIdx = headers.findIndex((h, i) => i !== dateIdx && i !== amtIdx && i !== typeIdx);
+            }
 
             if (dateIdx !== -1 && descIdx !== -1 && amtIdx !== -1) {
                 let totalIncome = 0;
