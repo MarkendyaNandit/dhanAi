@@ -11,7 +11,8 @@ const Forecast = ({ data, currency = 'USD', convert, format }) => {
   useEffect(() => {
     if (data && data._id) {
         setLoading(true);
-        fetchForecast(data._id, data.transactions, data.totalIncome, data.totalExpense)
+        // If we have an ID, we don't need to send the full transaction payload
+        fetchForecast(data._id, null, data.totalIncome, data.totalExpense)
             .then(res => setForecast(res))
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
