@@ -24,14 +24,22 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // 1. CORS MUST BE FIRST (Mirror Mode)
-app.use(cors({
-  origin: (origin, callback) => {
-    // Mirror the origin if it exists, or allow (for mobile/curl)
-    callback(null, true);
-  },
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // 2. Body Parsers
 app.use(express.json({ limit: '50mb' }));
