@@ -48,7 +48,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // 3. Routes
 import { protect } from './middleware/auth.js';
 
-app.use('/api/ai-extract', protect, analyzeRoutes);
+app.use('/api/ai-extract', analyzeRoutes);
 app.use('/api/chat', protect, chatRoutes);
 app.use('/api/forecast', protect, forecastRoutes);
 app.use('/api/auth', authRoutes);
