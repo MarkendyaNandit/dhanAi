@@ -21,10 +21,18 @@ const getAuthHeaders = (isFormData = false) => {
   return headers;
 };
 
-export const uploadStatement = async (file, userId) => {
+export const uploadStatement = async (file, userId, password = null) => {
+  let uid = userId;
+  if (userId && typeof userId === 'object') {
+    uid = userId._id || userId.id || (userId.user && (userId.user._id || userId.user.id));
+  }
+  
   const formData = new FormData();
   formData.append('statement', file);
-  formData.append('userId', userId);
+  formData.append('userId', uid || userId);
+  if (password) {
+    formData.append('password', password);
+  }
 
   const response = await fetch(`${API_URL}/analyze`, {
     method: 'POST',
@@ -117,11 +125,11 @@ export const syncTransactions = async () => {
     return safeParseJson(response);
 };
 
-export const updateOverview = async (transactions, totalIncome, totalExpense) => {
+export const updateOverview = async (transactions, totalIncome, totalExpense, userId, persist) => {
     const response = await fetch(`${API_URL}/analyze/update-overview`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ transactions, totalIncome, totalExpense })
+        body: JSON.stringify({ transactions, totalIncome, totalExpense, userId, persist })
     });
     if (!response.ok) throw new Error('Failed to update overview');
     return safeParseJson(response);

@@ -11,6 +11,7 @@ import Navigation from './components/Navigation';
 import Transactions from './pages/Transactions';
 import Forecast from './pages/Forecast';
 import Settings from './pages/Settings';
+import AIExtract from './pages/AIExtract';
 import AIParser from './pages/AIParser';
 import Chatbot from './pages/Chatbot';
 import GoalPlanner from './pages/GoalPlanner';
@@ -130,7 +131,8 @@ function MainApp() {
     setLoading(true);
     setError(null);
     try {
-      const response = await uploadStatement(file, currentUser._id);
+      const uid = currentUser?._id || currentUser?.id || (currentUser?.user && (currentUser.user._id || currentUser.user.id));
+      const response = await uploadStatement(file, uid);
       if (response && response.data) {
           setStatementData(response.data);
           loadHistory();
@@ -141,6 +143,76 @@ function MainApp() {
       setError(err.message || 'An error occurred during analysis.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMergeUpload = async (file, password = null) => {
+    setIsSyncing(true);
+    try {
+      const uid = currentUser?._id || currentUser?.id || (currentUser?.user && (currentUser.user._id || currentUser.user.id));
+      const response = await uploadStatement(file, uid, password);
+      if (response.requiresPassword) {
+        setIsSyncing(false);
+        return response;
+      }
+
+      const newTransactions = response.data?.transactions || [];
+
+      if (statementData && statementData.transactions && statementData.transactions.length > 0) {
+        const getNormalizedFingerprint = (t) => {
+          const datePart = String(t.date || '').split('T')[0];
+          const amt = Math.abs(parseFloat(String(t.amount || 0).replace(/,/g, ''))).toFixed(2);
+          const desc = String(t.description || '').toLowerCase().trim();
+          const direction = (t.type === 'income' || t.credit > 0) ? 'CR' : 'DR';
+          return `${datePart}|${amt}|${desc}|${direction}`;
+        };
+
+        const existingFingerprints = new Set(statementData.transactions.map(getNormalizedFingerprint));
+        const unseenTransactions = newTransactions.filter(t => !existingFingerprints.has(getNormalizedFingerprint(t)));
+        const mergedTransactions = [...statementData.transactions, ...unseenTransactions];
+
+        let mergedIncome = 0;
+        let mergedExpense = 0;
+        mergedTransactions.forEach(t => {
+          if (t.type === 'income') mergedIncome += Number(t.amount || 0);
+          else if (t.type === 'expense') mergedExpense += Number(t.amount || 0);
+        });
+
+        setStatementData(prev => ({
+          ...prev,
+          transactions: mergedTransactions,
+          totalIncome: mergedIncome,
+          totalExpense: mergedExpense
+        }));
+        setIsSyncing(false);
+
+        const uid = currentUser?._id || currentUser?.id || (currentUser?.user && (currentUser.user._id || currentUser.user.id));
+        updateOverview(mergedTransactions, mergedIncome, mergedExpense, uid, true)
+          .then(overviewResponse => {
+            setStatementData(prev => ({
+              ...prev,
+              totalIncome: overviewResponse.totalIncome || prev.totalIncome,
+              totalExpense: overviewResponse.totalExpense || prev.totalExpense,
+              overview: overviewResponse.overview || prev.overview,
+              insights: overviewResponse.insights || prev.insights,
+              essentials: overviewResponse.essentials || prev.essentials,
+              _id: overviewResponse.data?._id || prev._id
+            }));
+            if (overviewResponse.data) {
+              setHistory(prev => [overviewResponse.data, ...prev]);
+            }
+          })
+          .catch(err => console.warn('[MergeUpload] Background overview update failed:', err));
+      } else {
+        setStatementData(response.data);
+        setHistory(prev => [response.data, ...prev]);
+      }
+
+      setIsSyncing(false);
+      return response;
+    } catch (err) {
+      setIsSyncing(false);
+      throw err;
     }
   };
 
@@ -367,6 +439,7 @@ function MainApp() {
           <Route path="/settings/account" element={<AccountDetails currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           <Route path="/settings/security" element={<SecuritySettings currentUser={currentUser} setCurrentUser={setCurrentUser} onLogout={handleLogout} />} />
           
+          <Route path="/extract" element={<AIExtract onMerge={handleMergeUpload} isMerging={isSyncing} />} />
           <Route path="/ai-parser" element={<AIParser onAddTransactions={(txs) => setNewAdhocTransactions(prev => [...prev, ...txs])} />} />
           <Route path="/auth/google/callback" element={<GoogleCallback currentUser={currentUser} setCurrentUser={setCurrentUser} />} />
           

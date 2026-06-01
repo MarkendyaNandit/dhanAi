@@ -8,7 +8,7 @@ const Navigation = () => {
     { name: 'Forecast', path: '/forecast', icon: <TrendingUp size={16} /> },
     { name: 'Transactions', path: '/transactions', icon: <ListTree size={16} /> },
     { name: 'Goal Planner', path: '/goals', icon: <Target size={16} /> },
-    { name: 'AI Extract', path: '/ai-parser', icon: <Sparkles size={16} /> },
+    { name: 'AI Extract', path: '/extract', icon: <Sparkles size={16} /> },
     { name: 'AI Chat', path: '/chat', icon: <MessageSquare size={16} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={16} /> }
   ];

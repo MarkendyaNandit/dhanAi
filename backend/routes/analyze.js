@@ -156,15 +156,38 @@ router.post('/transaction', async (req, res) => {
 });
 
 router.post('/update-overview', async (req, res) => {
-  try {
-    const { transactions, totalIncome, totalExpense } = req.body;
-    if (!transactions) return res.status(400).json({ error: 'Transactions required' });
-
-    const { overview, essentials } = await generateConsolidatedOverview(transactions, totalIncome, totalExpense);
-    res.json({ overview, essentials });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+      const { transactions, totalIncome, totalExpense, userId, persist } = req.body;
+      if (!transactions) return res.status(400).json({ error: 'Transactions required' });
+  
+      // Re-run the python AI engine for the consolidated data
+      const { overview, essentials, insights } = await generateConsolidatedOverview(transactions, totalIncome, totalExpense);
+      
+      let newStatement = null;
+      if (persist && userId) {
+          newStatement = await Statement.create({
+              userId,
+              filename: 'Merged Financial Profile',
+              uploadDate: new Date(),
+              overview,
+              insights,
+              essentials,
+              totalIncome,
+              totalExpense,
+              transactions
+          });
+      }
+  
+      res.json({ 
+          overview, 
+          essentials, 
+          insights,
+          data: newStatement
+      });
+    } catch (error) {
+      console.error('Update Overview Error:', error);
+      res.status(500).json({ error: error.message });
+    }
 });
 
 export default router;
