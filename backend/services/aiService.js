@@ -156,16 +156,34 @@ export const analyzeStatementData = async (fileContent) => {
             const delimiter = lines[0].includes(';') ? ';' : ',';
             const headers = lines[0].toLowerCase().split(delimiter).map(h => h.replace(/(^["']|["']$)/g, '').trim());
 
-            const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('time') || h.includes('txn date') || h.includes('tran date') || h.includes('dt'));
-            let descIdx = headers.findIndex(h => h.includes('desc') || h.includes('memo') || h.includes('trans') || h.includes('narr') || h.includes('particular') || h.includes('detail') || h.includes('remark') || h.includes('ref') || h.includes('payee') || h.includes('merchant') || h.includes('note') || h.includes('info') || h.includes('name') || h.includes('label'));
-            const amtIdx = headers.findIndex(h => h.includes('amount') || h.includes('value') || h.includes('total') || h.includes('debit') || h.includes('credit') || h.includes('inr') || h.includes('rs') || h.includes('rupee') || h.includes('dr') || h.includes('cr') || h.includes('amt'));
-            const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('category'));
+            const dateIdx = headers.findIndex(h =>
+                h.includes('date') || h.includes('time') || h.includes('txn date') || h.includes('tran date') || h === 'dt'
+            );
+            const descIdx = headers.findIndex(h =>
+                h.includes('desc') || h.includes('memo') || h.includes('trans') ||
+                h.includes('narr') || h.includes('particular') || h.includes('detail') ||
+                h.includes('remark') || h.includes('ref') || h.includes('payee') ||
+                h.includes('merchant') || h.includes('note') || h.includes('info') ||
+                h === 'name' || h === 'label' || h === 'details'
+            );
+            const amtIdx = headers.findIndex(h =>
+                h.includes('amount') || h.includes('value') || h.includes('total') ||
+                h.includes('debit') || h.includes('credit') || h.includes('sum') ||
+                h.includes('inr') || h.includes('rs') || h.includes('rupee') ||
+                h === 'dr' || h === 'cr' || h === 'amt'
+            );
+            const typeIdx = headers.findIndex(h =>
+                h.includes('type') || h.includes('category') || h.includes('dr/cr') ||
+                h.includes('debit/credit') || h.includes('txn type')
+            );
 
-            if (descIdx === -1) {
-                descIdx = headers.findIndex((h, i) => i !== dateIdx && i !== amtIdx && i !== typeIdx);
-            }
+            // If no dedicated description column found, fall back to any non-date non-amount column
+            const effectiveDescIdx = descIdx !== -1
+                ? descIdx
+                : headers.findIndex((h, i) => i !== dateIdx && i !== amtIdx && i !== typeIdx && h.length > 0);
 
-            if (dateIdx !== -1 && descIdx !== -1 && amtIdx !== -1) {
+            if (dateIdx !== -1 && amtIdx !== -1 && effectiveDescIdx !== -1) {
+                const descIdx = effectiveDescIdx;
                 let totalIncome = 0;
                 let totalExpense = 0;
                 const transactions = [];
@@ -174,17 +192,49 @@ export const analyzeStatementData = async (fileContent) => {
                     const regex = new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
                     const row = lines[i].split(regex).map(val => val.replace(/(^["']|["']$)/g, '').trim());
 
-                    if (row.length <= Math.max(dateIdx, descIdx, amtIdx)) continue;
+                    if (row.length <= Math.max(dateIdx, effectiveDescIdx, amtIdx)) continue;
 
-                    let amtStr = row[amtIdx].replace(/[^0-9.-]+/g, "");
-                    let amount = parseFloat(amtStr);
-                    if (isNaN(amount)) continue;
+                    // Handle Indian bank CSVs that have separate Debit/Credit columns
+                    // e.g. headers: Date, Narration, Ref No, Value Date, Withdrawal Amt, Deposit Amt, Balance
+                    const debitIdx = headers.findIndex(h => h.includes('withdrawal') || h.includes('debit') || h === 'dr');
+                    const creditIdx = headers.findIndex(h => h.includes('deposit') || h.includes('credit') || h === 'cr');
 
-                    let type = typeIdx !== -1 ? row[typeIdx].toLowerCase() : (amount < 0 ? 'expense' : 'income');
+                    let amount = 0;
+                    let inferredType = null;
+
+                    if (debitIdx !== -1 && creditIdx !== -1) {
+                        // Two-column debit/credit format (most Indian bank statements)
+                        const debitStr = (row[debitIdx] || '').replace(/[^0-9.]/g, '');
+                        const creditStr = (row[creditIdx] || '').replace(/[^0-9.]/g, '');
+                        const debitAmt = parseFloat(debitStr) || 0;
+                        const creditAmt = parseFloat(creditStr) || 0;
+                        if (debitAmt > 0) { amount = debitAmt; inferredType = 'expense'; }
+                        else if (creditAmt > 0) { amount = creditAmt; inferredType = 'income'; }
+                        else continue; // both empty, skip row
+                    } else {
+                        // Single amount column — strip currency symbols and thousands commas
+                        // handles: ₹1,234.56  /  1.234,56  /  (1234.56)  /  -1234.56
+                        let amtStr = row[amtIdx]
+                            .replace(/₹|Rs\.?|INR/gi, '')  // currency symbols
+                            .replace(/\s/g, '')              // spaces
+                            .replace(/,(?=\d{3})/g, '')      // thousands separators: 1,234 → 1234
+                            .replace(/\(([0-9.]+)\)/, '-$1') // (1234) → -1234
+                            .trim();
+                        amount = parseFloat(amtStr);
+                        if (isNaN(amount) || amount === 0) continue;
+                    }
+
+                    let typeStr = typeIdx !== -1 ? row[typeIdx].toLowerCase() : '';
+                    const rawAmtCell = row[amtIdx] || '';
+                    const isIncome = inferredType === 'income'
+                        || typeStr.includes('income') || typeStr.includes('credit') || typeStr.includes('cr')
+                        || typeStr.includes('dep') || typeStr.includes('salary')
+                        || (!inferredType && (rawAmtCell.includes('+') || amount > 0 && typeStr === ''));
+
+                    // If no type signal at all, use sign of amount
+                    const finalType = inferredType
+                        || (isIncome ? 'income' : (amount < 0 ? 'income' : 'expense'));
                     amount = Math.abs(amount);
-
-                    const isIncome = type.includes('income') || type.includes('credit') || type.includes('dep') || (typeIdx === -1 && row[amtIdx].includes('+'));
-                    const finalType = isIncome ? 'income' : 'expense';
 
                     if (finalType === 'income') totalIncome += amount;
                     else totalExpense += amount;
@@ -247,13 +297,12 @@ export const analyzeStatementData = async (fileContent) => {
 
 const getMockResponse = () => {
     return {
-        overview: "Local analysis complete. You have a balanced budget this month.",
-        totalIncome: 5000,
-        totalExpense: 2350,
-        transactions: [
-            { date: "2023-10-01", description: "Salary", amount: 5000, type: "income", category: "Salary" },
-            { date: "2023-10-02", description: "Rent", amount: 1500, type: "expense", category: "Housing" }
-        ]
+        overview: "⚠️ Could not parse your CSV automatically. Please check that your file has Date, Description, and Amount columns. Showing sample data.",
+        insights: { dashboard: "CSV parsing failed — unrecognized column format. Please upload a standard bank statement CSV." },
+        essentials: [],
+        totalIncome: 0,
+        totalExpense: 0,
+        transactions: []
     };
 }
 
