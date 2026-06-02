@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { analyzeStatementData, parseRawMessages, generateConsolidatedOverview } from '../services/aiService.js';
 import Statement from '../models/Statement.js';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -20,18 +21,69 @@ router.post('/', upload.single('statement'), async (req, res) => {
     // Call AI service to analyze the data
     const analysisResult = await analyzeStatementData(fileContent);
 
-    // Save to MongoDB
-    const newStatement = await Statement.create({
-      userId,
-      filename: req.file.originalname,
-      uploadDate: new Date(),
-      overview: analysisResult.overview,
-      insights: analysisResult.insights,
-      totalIncome: analysisResult.totalIncome,
-      totalExpense: analysisResult.totalExpense,
-      transactions: analysisResult.transactions,
-      essentials: analysisResult.essentials
-    });
+    // Verify mongoose connection state before any database write
+    if (mongoose.connection.readyState !== 1) {
+        console.warn(`[analyze.js:24] Mongoose connection state is ${mongoose.connection.readyState}. Attempting to reconnect...`);
+        try {
+            await mongoose.connect(process.env.MONGO_URI);
+            console.log('[analyze.js:27] Successfully reconnected to MongoDB.');
+        } catch (err) {
+            console.error('[analyze.js:29] Failed to reconnect to MongoDB:', err);
+            return res.status(500).json({ error: 'Database connection lost and failed to reconnect.' });
+        }
+    }
+
+    let newStatement;
+    try {
+        console.log(`[analyze.js:36] Attempting to save new statement to MongoDB for user ${userId}...`);
+        
+        // Save to MongoDB
+        newStatement = await Statement.create({
+          userId,
+          filename: req.file.originalname,
+          uploadDate: new Date(),
+          overview: analysisResult.overview,
+          insights: analysisResult.insights,
+          totalIncome: analysisResult.totalIncome,
+          totalExpense: analysisResult.totalExpense,
+          transactions: analysisResult.transactions,
+          essentials: analysisResult.essentials
+        });
+        
+        console.log(`[analyze.js:51] Successfully saved statement to MongoDB with ID ${newStatement._id}`);
+    } catch (dbError) {
+        console.error(`[analyze.js:53] MongoDB Write Error: ${dbError.message}`, dbError);
+        
+        // Catch EPIPE errors and reconnect automatically if the connection is closed.
+        if ((dbError.message && dbError.message.includes('EPIPE')) || dbError.code === 'EPIPE') {
+            console.warn('[analyze.js:57] Caught EPIPE error! The long-running Python analysis likely caused the MongoDB connection to drop. Attempting reconnect and retry...');
+            try {
+                // Force a reconnect
+                await mongoose.disconnect();
+                await mongoose.connect(process.env.MONGO_URI);
+                
+                console.log(`[analyze.js:63] Reconnected. Retrying statement save...`);
+                newStatement = await Statement.create({
+                  userId,
+                  filename: req.file.originalname,
+                  uploadDate: new Date(),
+                  overview: analysisResult.overview,
+                  insights: analysisResult.insights,
+                  totalIncome: analysisResult.totalIncome,
+                  totalExpense: analysisResult.totalExpense,
+                  transactions: analysisResult.transactions,
+                  essentials: analysisResult.essentials
+                });
+                console.log(`[analyze.js:75] Successfully saved statement on retry with ID ${newStatement._id}`);
+            } catch (retryError) {
+                console.error('[analyze.js:77] Retry failed:', retryError);
+                return res.status(500).json({ error: 'Database connection dropped (EPIPE) and retry failed.', details: retryError.message });
+            }
+        } else {
+            // Return a proper JSON error response instead of crashing with HTTP 500
+            return res.status(500).json({ error: 'Database write failed', details: dbError.message });
+        }
+    }
 
     // Check for spending alerts
     import('../services/notificationService.js').then(m => m.checkSpendingAlert(userId, analysisResult.transactions));
@@ -52,7 +104,9 @@ router.get('/', async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'User ID required' });
 
+    console.log(`[analyze.js:55] Fetching statements for user ${userId}...`);
     const statements = await Statement.find({ userId }).sort({ uploadDate: -1 });
+    console.log(`[analyze.js:57] Fetched ${statements.length} statements.`);
     res.json(statements);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch statements' });
@@ -108,7 +162,9 @@ router.post('/parse-text', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    console.log(`[analyze.js:111] Fetching statement ${req.params.id}...`);
     const statement = await Statement.findById(req.params.id);
+    console.log(`[analyze.js:113] Fetch result: ${statement ? 'Found' : 'Not found'}`);
     if (!statement) return res.status(404).json({ error: 'Not found' });
     res.json(statement);
   } catch (error) {
@@ -126,7 +182,9 @@ router.post('/transaction', async (req, res) => {
         }
 
         // Find the most recent statement for this user
+        console.log(`[analyze.js:129] Finding latest statement for user ${userId}...`);
         const statement = await Statement.findOne({ userId }).sort({ uploadDate: -1 });
+        console.log(`[analyze.js:131] Find result: ${statement ? 'Found' : 'Not found'}`);
         if (!statement) {
             return res.status(404).json({ error: 'No statement found to append to. Please upload a statement first.' });
         }
@@ -147,7 +205,19 @@ router.post('/transaction', async (req, res) => {
             statement.totalExpense += newTransaction.amount;
         }
 
-        await statement.save();
+        if (mongoose.connection.readyState !== 1) {
+            console.warn(`[analyze.js:146] Mongoose connection state is ${mongoose.connection.readyState}. Reconnecting...`);
+            try { await mongoose.connect(process.env.MONGO_URI); } catch (e) {}
+        }
+
+        try {
+            console.log(`[analyze.js:151] Attempting to save updated transaction for statement ${statement._id}...`);
+            await statement.save();
+            console.log(`[analyze.js:153] Successfully saved updated transaction.`);
+        } catch (dbError) {
+            console.error(`[analyze.js:155] MongoDB Write Error: ${dbError.message}`);
+            return res.status(500).json({ error: 'Database write failed', details: dbError.message });
+        }
 
         res.json({ message: 'Transaction added', transaction: newTransaction, statementId: statement._id });
     } catch (error) {
@@ -165,17 +235,51 @@ router.post('/update-overview', async (req, res) => {
       
       let newStatement = null;
       if (persist && userId) {
-          newStatement = await Statement.create({
-              userId,
-              filename: 'Merged Financial Profile',
-              uploadDate: new Date(),
-              overview,
-              insights,
-              essentials,
-              totalIncome,
-              totalExpense,
-              transactions
-          });
+          if (mongoose.connection.readyState !== 1) {
+              console.warn(`[analyze.js:168] Mongoose connection state is ${mongoose.connection.readyState}. Attempting to reconnect...`);
+              try { await mongoose.connect(process.env.MONGO_URI); } catch (e) {}
+          }
+          
+          try {
+              console.log(`[analyze.js:173] Attempting to save merged profile to MongoDB for user ${userId}...`);
+              newStatement = await Statement.create({
+                  userId,
+                  filename: 'Merged Financial Profile',
+                  uploadDate: new Date(),
+                  overview,
+                  insights,
+                  essentials,
+                  totalIncome,
+                  totalExpense,
+                  transactions
+              });
+              console.log(`[analyze.js:185] Successfully saved merged profile with ID ${newStatement._id}`);
+          } catch (dbError) {
+              console.error(`[analyze.js:187] MongoDB Write Error: ${dbError.message}`);
+              if ((dbError.message && dbError.message.includes('EPIPE')) || dbError.code === 'EPIPE') {
+                  console.warn('[analyze.js:189] Caught EPIPE error. Attempting reconnect and retry...');
+                  try {
+                      await mongoose.disconnect();
+                      await mongoose.connect(process.env.MONGO_URI);
+                      newStatement = await Statement.create({
+                          userId,
+                          filename: 'Merged Financial Profile',
+                          uploadDate: new Date(),
+                          overview,
+                          insights,
+                          essentials,
+                          totalIncome,
+                          totalExpense,
+                          transactions
+                      });
+                      console.log(`[analyze.js:203] Successfully saved merged profile on retry.`);
+                  } catch (retryError) {
+                      return res.status(500).json({ error: 'Database retry failed', details: retryError.message });
+                  }
+              } else {
+                  return res.status(500).json({ error: 'Database write failed', details: dbError.message });
+              }
+          }
       }
   
       res.json({ 
